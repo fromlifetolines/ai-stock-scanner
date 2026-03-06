@@ -39,14 +39,15 @@ export function FundamentalAnalysis({ onUnlock }: { onUnlock: () => void }) {
                     <div className="absolute inset-0 flex flex-col items-center justify-end bg-gradient-to-t from-black via-black/80 to-transparent pb-10 z-10 pointer-events-none">
                         <button
                             onClick={onUnlock}
-                            className="jelly-button-cta pointer-events-auto flex flex-col items-center gap-1 px-8 py-4 !rounded-3xl relative overflow-hidden group/btn shadow-[0_0_40px_rgba(52,211,118,0.25)]"
+                            className="jelly-button-cta pointer-events-auto flex flex-col items-center gap-1 px-8 py-4 !rounded-3xl relative overflow-hidden group/btn shadow-[0_0_40px_rgba(52,211,118,0.25)] hover:shadow-[0_0_70px_rgba(52,211,118,0.6)] border border-emerald-500/30 hover:border-emerald-400/80 transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] ring-4 ring-transparent hover:ring-emerald-500/20"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]" />
-                            <div className="flex items-center gap-2">
-                                <Lock className="w-5 h-5 text-emerald-300 drop-shadow-[0_0_5px_rgba(52,211,118,0.8)]" />
-                                <span className="font-black text-white tracking-wide text-[16px]">解鎖 PRO：查看 AI 精確進場點位與高階圖表</span>
+                            <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]" />
+                            <div className="flex items-center gap-2 relative z-10">
+                                <Lock className="w-5 h-5 text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,118,1)] group-hover/btn:scale-110 group-active/btn:scale-95 group-hover/btn:-translate-y-0.5 transition-all duration-300" />
+                                <span className="font-black text-white tracking-wide text-[16px] group-hover/btn:text-emerald-50 transition-colors drop-shadow-md">解鎖 PRO：查看 AI 精確進場點位與高階圖表</span>
                             </div>
-                            <span className="text-xs text-emerald-100/70 font-medium tracking-wider mt-1">根據 20 種技術指標與基本面綜合計算</span>
+                            <span className="text-xs text-emerald-100/70 font-medium tracking-wider mt-1 relative z-10 group-hover/btn:text-emerald-200 transition-colors">根據 20 種技術指標與基本面綜合計算</span>
                         </button>
                     </div>
                 </div>
