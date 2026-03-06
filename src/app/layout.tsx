@@ -22,16 +22,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-TW" className="dark">
-      <body className={`${inter.variable} antialiased h-screen flex overflow-hidden bg-slate-900 text-slate-200 selection:bg-emerald-500/30`}>
-        <Sidebar />
-        <div className="flex-1 flex flex-col min-w-0 bg-[#0f172a] relative">
-          <TopHeader />
-          <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-16">
-            <div className="max-w-7xl mx-auto h-full">
-              {children}
-            </div>
-          </main>
-          <FooterDisclaimer />
+      <body className={`${inter.variable} antialiased h-screen flex overflow-hidden bg-black text-slate-200 selection:bg-emerald-500/30 relative`}>
+        {/* Aurora Glow Backgrounds */}
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-gradient-to-br from-emerald-900/30 to-blue-900/20 blur-[120px] rounded-full pointer-events-none z-0" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-gradient-to-tl from-purple-900/20 to-teal-900/20 blur-[120px] rounded-full pointer-events-none z-0" />
+
+        <div className="z-10 flex w-full h-full">
+          <Sidebar />
+          <div className="flex-1 flex flex-col min-w-0 bg-transparent relative z-10">
+            <TopHeader />
+            <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-16">
+              <div className="max-w-7xl mx-auto h-full">
+                {children}
+              </div>
+            </main>
+            <FooterDisclaimer />
+          </div>
         </div>
       </body>
     </html>

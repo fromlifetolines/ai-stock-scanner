@@ -18,10 +18,11 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="animate-in fade-in duration-500">
-      <h1 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-        <span className="text-emerald-400 font-extrabold tracking-widest text-sm bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">AAPL</span>
-        市場掃描 <span className="text-slate-500 font-medium">/ Apple Inc.</span>
+    <div className="animate-in fade-in duration-700">
+      <h1 className="text-3xl font-black text-white mb-8 flex items-center gap-3 tracking-tight">
+        <span className="text-emerald-300 font-extrabold tracking-widest text-xs bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30 shadow-[0_0_10px_rgba(52,211,118,0.2)] uppercase">AAPL</span>
+        <span className="text-gradient-silver drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]">市場掃描</span>
+        <span className="text-slate-500 font-semibold text-2xl">/ Apple Inc.</span>
       </h1>
 
       <TopMetrics />

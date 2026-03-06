@@ -25,50 +25,53 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/60 backdrop-blur-xl"
                     />
 
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        initial={{ opacity: 0, scale: 0.9, y: 30 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
-                        className="glass-card max-w-3xl w-full p-0 overflow-hidden relative border-emerald-500/30 z-10 flex flex-col md:flex-row shadow-[0_0_50px_rgba(16,185,129,0.15)]"
+                        transition={{ type: "spring", duration: 0.6, bounce: 0.2 }}
+                        className="vision-card max-w-4xl w-full p-0 overflow-hidden relative z-10 flex flex-col md:flex-row shadow-[0_0_80px_rgba(52,211,118,0.15)]"
                     >
                         <button
+                            aria-label="Close Modal"
                             onClick={onClose}
-                            className="absolute top-4 right-4 z-20 p-2 bg-slate-900/50 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"
+                            className="absolute top-6 right-6 z-20 p-2 bg-white/10 hover:bg-white/20 rounded-full text-slate-300 hover:text-white transition-colors backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
                         >
                             <X className="w-5 h-5" />
                         </button>
 
                         {/* Left Side: Value Prop */}
-                        <div className="flex-1 p-8 bg-gradient-to-br from-slate-900 to-slate-950 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl" />
+                        <div className="flex-1 p-10 bg-transparent relative overflow-hidden">
+                            <div className="absolute top-[-20%] right-[-20%] w-96 h-96 bg-emerald-500/20 rounded-full blur-[120px] pointer-events-none" />
 
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-bold tracking-wider mb-6">
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm font-black tracking-widest mb-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),_0_0_10px_rgba(52,211,118,0.2)]">
                                 <Sparkles className="w-4 h-4" />
                                 PRO 專業版
                             </div>
 
-                            <h2 className="text-3xl font-extrabold text-white mb-2 leading-tight">
+                            <h2 className="text-4xl font-black text-white mb-4 leading-tight tracking-tight">
                                 解鎖華爾街級<br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-200 drop-shadow-[0_0_15px_rgba(52,211,118,0.4)]">
                                     AI 投資算力
                                 </span>
                             </h2>
-                            <p className="text-slate-400 mb-8 font-medium">每天不到一杯咖啡錢，讓資料科學為您的資產增值。</p>
+                            <p className="text-slate-300 mb-10 font-medium text-lg">每天不到一杯咖啡錢，讓資料科學為您的資產增值。</p>
 
-                            <ul className="space-y-4">
+                            <ul className="space-y-6">
                                 {features.map((feature, i) => (
                                     <motion.li
                                         key={i}
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.2 + i * 0.1 }}
-                                        className="flex items-center gap-3 text-slate-300"
+                                        transition={{ delay: 0.3 + i * 0.1 }}
+                                        className="flex items-center gap-4 text-slate-200 font-semibold"
                                     >
-                                        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                                        <div className="p-1 bg-emerald-500/10 rounded-full border border-emerald-500/20 shadow-[0_0_8px_rgba(52,211,118,0.2)]">
+                                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                                        </div>
                                         <span>{feature}</span>
                                     </motion.li>
                                 ))}
@@ -76,34 +79,39 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
                         </div>
 
                         {/* Right Side: Mock Checkout */}
-                        <div className="w-full md:w-80 p-8 bg-slate-900 border-l border-slate-800 flex flex-col justify-center">
-                            <div className="text-center mb-6">
-                                <span className="text-5xl font-black text-white">
+                        <div className="w-full md:w-[380px] p-10 bg-white/[0.02] border-l border-white/5 flex flex-col justify-center relative">
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
+
+                            <div className="text-center mb-8 relative z-10">
+                                <span className="text-6xl font-black text-white tabular-nums tracking-tighter drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
                                     $299
                                 </span>
-                                <span className="text-slate-500 font-medium ml-1">/ 月</span>
-                                <p className="text-sm text-slate-400 mt-2">新台幣 NTD，隨時可取消</p>
+                                <span className="text-slate-400 font-bold ml-2 text-lg">/ 月</span>
+                                <p className="text-sm text-slate-400 mt-4 font-medium">新台幣 NTD，隨時可取消</p>
                             </div>
 
                             {/* Stripe Mock UI */}
-                            <div className="space-y-3 mb-6">
-                                <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex items-center gap-3">
-                                    <CreditCard className="w-5 h-5 text-slate-500" />
+                            <div className="space-y-4 mb-8 relative z-10">
+                                <div className="bg-black/40 p-4 rounded-2xl border border-white/10 flex items-center gap-4 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                                    <CreditCard className="w-6 h-6 text-slate-400" />
                                     <div className="flex-1">
-                                        <div className="h-2 w-24 bg-slate-800 rounded mb-1.5" />
-                                        <div className="h-1.5 w-16 bg-slate-800 rounded" />
+                                        <div className="h-2.5 w-32 bg-white/10 rounded-full mb-2" />
+                                        <div className="h-2 w-20 bg-white/5 rounded-full" />
                                     </div>
                                 </div>
                             </div>
 
-                            <button className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5 relative overflow-hidden group">
-                                <span className="relative z-10 flex items-center justify-center gap-2">
-                                    <Lock className="w-4 h-4" /> 確認升級並付款
-                                </span>
-                            </button>
+                            <div className="relative z-10">
+                                <button className="jelly-button-cta w-full py-4 text-lg font-bold text-white relative overflow-hidden group">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                                    <span className="relative z-10 flex items-center justify-center gap-2">
+                                        <Lock className="w-5 h-5 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]" /> 確認升級並付款
+                                    </span>
+                                </button>
+                            </div>
 
-                            <p className="text-[10px] text-center text-slate-500 mt-4 flex items-center justify-center gap-1">
-                                Powered by <span className="font-bold text-slate-400 tracking-wider">Stripe</span>
+                            <p className="text-xs text-center text-slate-500 mt-6 flex items-center justify-center gap-1.5 font-medium relative z-10">
+                                Powered by <span className="font-black text-slate-300 tracking-widest uppercase">Stripe</span>
                             </p>
                         </div>
                     </motion.div>
@@ -113,5 +121,4 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
     );
 }
 
-// Separate component to prevent hydration errors for the Lock icon
 import { Lock } from "lucide-react";

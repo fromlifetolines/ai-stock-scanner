@@ -16,16 +16,16 @@ export function Sidebar() {
     const pathname = usePathname();
 
     return (
-        <aside className="w-64 border-r border-slate-800 bg-slate-900/50 backdrop-blur-xl flex flex-col h-full shrink-0">
+        <aside className="w-64 bg-transparent border-r border-white/5 flex flex-col h-full shrink-0 relative z-10 pt-4">
             {/* Logo Area */}
-            <div className="h-16 flex items-center px-6 border-b border-slate-800">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">
+            <div className="h-16 flex items-center px-8 mb-4">
+                <h1 className="text-lg font-black tracking-tight text-gradient-silver">
                     Mr. How | AI 分析終端
                 </h1>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 py-6 px-3 space-y-1">
+            <nav className="flex-1 py-4 px-4 space-y-2">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href;
                     return (
@@ -33,16 +33,16 @@ export function Sidebar() {
                             key={item.href}
                             href={item.href}
                             className={clsx(
-                                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group",
+                                "flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 group",
                                 isActive
-                                    ? "bg-slate-800 text-white"
-                                    : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+                                    ? "bg-white/[0.08] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+                                    : "text-slate-400 hover:bg-white/[0.04] hover:text-slate-200"
                             )}
                         >
                             <item.icon
                                 className={clsx(
                                     "w-5 h-5 transition-colors",
-                                    isActive ? "text-emerald-400" : "text-slate-500 group-hover:text-slate-400"
+                                    isActive ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "text-slate-500 group-hover:text-slate-300"
                                 )}
                             />
                             {item.name}
@@ -52,17 +52,20 @@ export function Sidebar() {
             </nav>
 
             {/* Upgrade CTA */}
-            <div className="p-4">
-                <div className="glass-border-glow rounded-xl">
-                    <button className="relative w-full overflow-hidden rounded-xl bg-slate-800/80 p-4 transition-all hover:bg-slate-800 group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 opacity-0 transition-opacity group-hover:opacity-100" />
-                        <div className="flex items-center justify-center gap-2 text-yellow-500 mb-1">
-                            <Sparkles className="w-4 h-4 animate-pulse" />
-                            <span className="font-bold text-sm">升級 PRO</span>
-                        </div>
-                        <p className="text-xs text-slate-400 font-medium text-center">解鎖無限算力</p>
-                    </button>
-                </div>
+            <div className="p-6 mt-auto mb-4">
+                <button
+                    onClick={() => window.dispatchEvent(new Event('open-subscription-modal'))}
+                    className="jelly-button-cta w-full p-4 flex flex-col items-center justify-center gap-1 group relative overflow-hidden"
+                >
+                    {/* Subtle sheen animation */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+
+                    <div className="flex items-center justify-center gap-2 text-white/90">
+                        <Sparkles className="w-4 h-4 text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,118,0.8)]" />
+                        <span className="font-extrabold text-sm tracking-wide">升級 PRO</span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 font-medium">解鎖無限算力</p>
+                </button>
             </div>
         </aside>
     );
