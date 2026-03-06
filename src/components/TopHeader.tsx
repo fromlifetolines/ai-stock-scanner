@@ -8,10 +8,11 @@ export function TopHeader() {
     const { handleSearch } = useAppState();
     const [inputValue, setInputValue] = useState("");
     const [marketType, setMarketType] = useState("台股 TW");
+    const [strategyValue, setStrategyValue] = useState("");
 
     const onSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && inputValue.trim()) {
-            handleSearch(inputValue, marketType);
+            handleSearch(inputValue, marketType, strategyValue.trim());
         }
     };
 
@@ -19,7 +20,7 @@ export function TopHeader() {
         <header className="h-20 flex items-center justify-between px-8 shrink-0 z-10 sticky top-0 bg-transparent backdrop-blur-[2px]">
 
             {/* Search Bar Container */}
-            <div className="flex-1 max-w-3xl mx-auto">
+            <div className="flex-1 max-w-3xl mx-auto flex flex-col gap-2">
                 <div className="relative group flex items-center bg-white/[0.05] backdrop-blur-md border border-white/10 rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] focus-within:border-white/30 focus-within:bg-white/[0.08] focus-within:ring-1 focus-within:ring-white/20 transition-all">
 
                     {/* Market Dropdown */}
@@ -49,12 +50,25 @@ export function TopHeader() {
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={onSearchSubmit}
                         className="block w-full pl-3 pr-4 py-3 bg-transparent text-sm text-white placeholder-slate-400 outline-none"
-                        placeholder="輸入股票代號或公司名稱 (例：AAPL, 2330) 按 Enter 搜尋..."
+                        placeholder="輸入股票代號或名稱 (例：0050, 2330, 00919) 按 Enter 搜尋..."
                     />
 
                     <div className="pr-4 flex items-center pointer-events-none shrink-0">
                         <span className="text-xs font-semibold text-slate-400 bg-white/[0.05] px-2 py-1 rounded border border-white/10">↵</span>
                     </div>
+                </div>
+
+                {/* Optional Custom AI Strategy Input */}
+                <div className="px-6 flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-black tracking-widest text-emerald-500/70 border border-emerald-500/20 bg-emerald-500/5 px-1.5 py-0.5 rounded">AI Option</span>
+                    <input 
+                        type="text"
+                        value={strategyValue}
+                        onChange={(e) => setStrategyValue(e.target.value)}
+                        onKeyDown={onSearchSubmit}
+                        placeholder="輸入您的個人化策略 (例：波段交易、價值投資、突破追價...)，將自動帶入模型計算"
+                        className="flex-1 bg-transparent border-b border-white/10 focus:border-emerald-500/50 pb-1 text-xs text-slate-300 placeholder-slate-600 outline-none transition-colors"
+                    />
                 </div>
             </div>
 

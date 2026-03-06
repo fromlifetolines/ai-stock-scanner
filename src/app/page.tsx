@@ -5,14 +5,17 @@ import { TopMetrics } from "@/components/dashboard/TopMetrics";
 import { KLineChart } from "@/components/dashboard/KLineChart";
 import { SentimentGauge } from "@/components/dashboard/SentimentGauge";
 import { FundamentalAnalysis } from "@/components/dashboard/FundamentalAnalysis";
+import { TechnicalTab } from "@/components/dashboard/tabs/TechnicalTab";
+import { FundamentalTab } from "@/components/dashboard/tabs/FundamentalTab";
 import { DisclaimerModal } from "@/components/modals/DisclaimerModal";
 import { SubscriptionModal } from "@/components/modals/SubscriptionModal";
 import { useAppState } from "@/lib/store";
-import { RefreshCw, Zap } from "lucide-react";
+import { RefreshCw, Zap, LayoutDashboard, LineChart, FileText } from "lucide-react";
 import clsx from "clsx";
 
 export default function Home() {
   const [isSubscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'technical' | 'fundamental'>('dashboard');
   const { currentData, isSyncing, triggerLiveSync } = useAppState();
 
   useEffect(() => {
@@ -52,29 +55,69 @@ export default function Home() {
         </button>
       </div>
 
-      <TopMetrics />
-
-      {/* AI Flash Insight */}
-      <div className="mb-8 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-blue-500/20 to-purple-500/20 p-[1px]">
-        <div className="bg-black/80 backdrop-blur-xl rounded-[15px] p-6 flex flex-col sm:flex-row items-start gap-4">
-          <div className="p-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-xl shadow-[0_0_15px_rgba(250,204,21,0.4)] shrink-0">
-            <Zap className="w-6 h-6 text-yellow-950" />
-          </div>
-          <div>
-            <h3 className="text-lg font-black text-yellow-400 mb-1 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">AI 閃電診斷 (AI Flash Insight)</h3>
-            <p className="text-slate-300 font-medium leading-relaxed">
-              {currentData.aiInsight}
-            </p>
-          </div>
-        </div>
+      {/* Tab Navigation */}
+      <div className="flex items-center gap-2 mb-8 bg-white/[0.02] p-1.5 rounded-2xl w-fit border border-white/5 mx-auto lg:mx-0">
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className={clsx(
+            "flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300",
+            activeTab === 'dashboard' ? "bg-emerald-500/20 text-emerald-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),_0_0_15px_rgba(52,211,118,0.2)]" : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+          )}
+        >
+          <LayoutDashboard className="w-4 h-4" /> 即時概覽
+        </button>
+        <button
+          onClick={() => setActiveTab('technical')}
+          className={clsx(
+            "flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300",
+            activeTab === 'technical' ? "bg-emerald-500/20 text-emerald-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),_0_0_15px_rgba(52,211,118,0.2)]" : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+          )}
+        >
+          <LineChart className="w-4 h-4" /> 技術面深研
+        </button>
+        <button
+          onClick={() => setActiveTab('fundamental')}
+          className={clsx(
+            "flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300",
+            activeTab === 'fundamental' ? "bg-emerald-500/20 text-emerald-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),_0_0_15px_rgba(52,211,118,0.2)]" : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+          )}
+        >
+          <FileText className="w-4 h-4" /> 基本面脫水
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <KLineChart />
-        <SentimentGauge />
-      </div>
+      {/* Tab Content */}
+      {activeTab === 'dashboard' && (
+          <div className="animate-in fade-in duration-500">
+              <TopMetrics />
 
-      <FundamentalAnalysis onUnlock={() => setSubscriptionModalOpen(true)} />
+              {/* AI Flash Insight */}
+              <div className="mb-8 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-blue-500/20 to-purple-500/20 p-[1px]">
+                  <div className="bg-black/80 backdrop-blur-xl rounded-[15px] p-6 flex flex-col sm:flex-row items-start gap-4">
+                  <div className="p-3 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-xl shadow-[0_0_15px_rgba(250,204,21,0.4)] shrink-0">
+                      <Zap className="w-6 h-6 text-yellow-950" />
+                  </div>
+                  <div>
+                      <h3 className="text-lg font-black text-yellow-400 mb-1 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">AI 閃電診斷 (AI Flash Insight)</h3>
+                      <p className="text-slate-300 font-medium leading-relaxed whitespace-pre-wrap">
+                      {currentData.aiInsight}
+                      </p>
+                  </div>
+                  </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <KLineChart />
+                  <SentimentGauge />
+              </div>
+
+              <FundamentalAnalysis onUnlock={() => setSubscriptionModalOpen(true)} />
+          </div>
+      )}
+
+      {activeTab === 'technical' && <TechnicalTab />}
+      
+      {activeTab === 'fundamental' && <FundamentalTab onUnlock={() => setSubscriptionModalOpen(true)} />}
 
       {/* Modals */}
       <DisclaimerModal />

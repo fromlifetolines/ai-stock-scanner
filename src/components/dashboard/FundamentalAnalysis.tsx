@@ -29,14 +29,17 @@ export function FundamentalAnalysis({ onUnlock }: { onUnlock: () => void }) {
                     </p>
 
                     {/* Paywall Overlay */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-black via-black/40 to-transparent">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-black via-black/60 to-transparent">
                         <button
                             onClick={onUnlock}
-                            className="jelly-button-cta mt-8 flex items-center gap-3 px-8 py-4 !rounded-full relative overflow-hidden group/btn"
+                            className="jelly-button-cta mt-8 flex flex-col items-center gap-1 px-8 py-4 !rounded-3xl relative overflow-hidden group/btn shadow-[0_0_30px_rgba(52,211,118,0.2)]"
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]" />
-                            <Lock className="w-5 h-5 text-emerald-300 drop-shadow-[0_0_5px_rgba(52,211,118,0.8)]" />
-                            <span className="font-bold text-white tracking-wide text-[15px]">解鎖完整 AI 財報解析與主力籌碼分析 - 每月僅 $299</span>
+                            <div className="flex items-center gap-2">
+                                <Lock className="w-5 h-5 text-emerald-300 drop-shadow-[0_0_5px_rgba(52,211,118,0.8)]" />
+                                <span className="font-black text-white tracking-wide text-[16px]">解鎖 PRO：查看 AI 精確進場點位與停損價格</span>
+                            </div>
+                            <span className="text-xs text-emerald-100/70 font-medium tracking-wider">根據 20 種技術指標與基本面綜合計算</span>
                         </button>
                     </div>
                 </div>

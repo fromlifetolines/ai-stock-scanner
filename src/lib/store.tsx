@@ -20,6 +20,7 @@ export interface StockData {
     sentimentScore: number;
     klineData: KLinePoint[];
     aiInsight: string;
+    customStrategy?: string;
 }
 
 interface AppStateContextType {
@@ -28,7 +29,7 @@ interface AppStateContextType {
     setSearchQuery: (query: string) => void;
     isLoading: boolean;
     loadingStep: string;
-    handleSearch: (query: string, marketToken: string) => Promise<void>;
+    handleSearch: (query: string, marketToken: string, strategy?: string) => Promise<void>;
 
     // Live Sync
     isSyncing: boolean;
@@ -69,7 +70,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const [isSyncing, setIsSyncing] = useState(false);
     const [currentData, setCurrentData] = useState<StockData | null>(mockInitialData);
 
-    const handleSearch = async (query: string, marketToken: string) => {
+    const handleSearch = async (query: string, marketToken: string, strategy: string = "") => {
         if (!query.trim()) return;
 
         setIsLoading(true);
@@ -82,7 +83,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setLoadingStep("AI 正在讀取近三季財報...");
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        setLoadingStep("分析市場情緒中...");
+        setLoadingStep(strategy ? `應用「${strategy}」策略分析中...` : "分析市場情緒中...");
         await new Promise(resolve => setTimeout(resolve, 500));
 
         // Generate mock new data based on query
@@ -97,7 +98,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             "短線乖離過大，技術面出現過熱訊號 (RSI > 80)。量能萎縮顯示追價意願不足，近期可能面臨大幅回檔修正風險。",
             "產業正處於復甦週期的初期階段，財報盈餘驚喜 (Earnings Surprise) 機率高。法人默默籌碼集中，突破前高指日可待。"
         ];
-        const randomInsight = insights[Math.floor(Math.random() * insights.length)];
+        
+        // Add strategy prefix if provided
+        let randomInsight = insights[Math.floor(Math.random() * insights.length)];
+        if (strategy) {
+            randomInsight = `已根據您的「${strategy}」策略優化：\n\n${randomInsight}`;
+        }
 
         setCurrentData({
             symbol: query.toUpperCase().substring(0, 5),
@@ -109,6 +115,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             volatility: Math.random() > 0.5 ? "高" : "中等偏低",
             sentimentScore: Math.floor(Math.random() * 100),
             aiInsight: randomInsight,
+            customStrategy: strategy || undefined,
             klineData: mockInitialData.klineData.map(d => ({
                 ...d,
                 price: basePrice + (Math.random() * (basePrice * 0.05) - (basePrice * 0.025)), // +/- 2.5% variation
