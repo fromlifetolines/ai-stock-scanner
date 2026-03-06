@@ -3,15 +3,17 @@
 import { KLineChart } from "@/components/dashboard/KLineChart";
 import { useAppState } from "@/lib/store";
 import { Activity, TrendingUp, BarChart2 } from "lucide-react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export function TechnicalTab() {
     const { currentData } = useAppState();
     if (!currentData) return null;
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            {/* AI Technical Analysis Report Card */}
-            <div className="vision-card p-1 relative overflow-hidden group border-emerald-500/30">
+        <ErrorBoundary errorMessage="⚠️ 技術分析組件載入失敗">
+            <div className="space-y-6 animate-in fade-in duration-500">
+                {/* AI Technical Analysis Report Card */}
+                <div className="vision-card p-1 relative overflow-hidden group border-emerald-500/30">
                 <div className="bg-gradient-to-br from-emerald-900/40 via-black to-blue-900/20 backdrop-blur-xl rounded-[22px] p-6 lg:p-8">
                     <div className="flex items-center gap-4 mb-6 relative z-10">
                         <div className="p-3 bg-emerald-500/20 rounded-xl border border-emerald-500/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),_0_0_15px_rgba(52,211,118,0.4)]">
@@ -25,7 +27,11 @@ export function TechnicalTab() {
                             <h3 className="text-sm font-bold text-slate-400 mb-2 flex items-center gap-2">
                                 <TrendingUp className="w-4 h-4" /> 趨勢判斷
                             </h3>
-                            <p className="text-emerald-400 font-semibold text-lg">{currentData.price > currentData.klineData[0].price ? "多頭排列 (Bullish)" : "空頭排列 (Bearish)"}</p>
+                            <p className="text-emerald-400 font-semibold text-lg">
+                                {currentData.klineData && currentData.klineData.length > 0 
+                                    ? (currentData.price > currentData.klineData[0].price ? "多頭排列 (Bullish)" : "空頭排列 (Bearish)") 
+                                    : "資料讀取中..."}
+                            </p>
                             <p className="text-xs text-slate-500 mt-2">短線均線 (5MA, 10MA) 呈多頭發散，上行走勢明確。</p>
                         </div>
                         <div className="bg-white/[0.03] rounded-2xl p-5 border border-white/5">
@@ -62,6 +68,7 @@ export function TechnicalTab() {
                     <p className="text-slate-400 font-semibold tracking-widest text-sm uppercase">Volume & MACD Data Loading...</p>
                 </div>
             </div>
-        </div>
+            </div>
+        </ErrorBoundary>
     );
 }
