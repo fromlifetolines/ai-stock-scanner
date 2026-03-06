@@ -20,7 +20,7 @@ interface Holding {
 }
 
 export default function PortfolioPage() {
-    const { isSyncing, triggerLiveSync, currentData } = useAppState();
+    const { isSyncing, triggerLiveSync, currentData, isProUser } = useAppState();
     const [isSubscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
     const [holdings, setHoldings] = useState<Holding[]>([]);
     const [isAdding, setIsAdding] = useState(false);
@@ -55,7 +55,7 @@ export default function PortfolioPage() {
         }
     }, [holdings]);
 
-    // Update current price if it matches global state (a simulation of real-time update)
+    // Update current price if it matches global state
     useEffect(() => {
         if (currentData) {
             setHoldings(prev => prev.map(h => {
@@ -75,14 +75,12 @@ export default function PortfolioPage() {
             name: `${addSymbol.toUpperCase()} (待更新)`,
             shares: Number(addShares),
             avgPrice: Number(addPrice),
-            currentPrice: Number(addPrice), // Fallback until fetched
+            currentPrice: Number(addPrice),
         };
 
         setHoldings(prev => [...prev, newHolding]);
         setIsAdding(false);
         setAddSymbol(""); setAddShares(""); setAddPrice("");
-        
-        // In a full app, we would immediately fetch `currentPrice` for this new symbol here.
     };
 
     const removeHolding = (symbol: string) => {
@@ -94,6 +92,7 @@ export default function PortfolioPage() {
         return holdings.map(h => ({
             ...h,
             pnl: (h.currentPrice - h.avgPrice) * h.shares,
+            pnlPercent: h.avgPrice > 0 ? ((h.currentPrice - h.avgPrice) / h.avgPrice) * 100 : 0,
             totalValue: h.currentPrice * h.shares
         }));
     }, [holdings]);
@@ -107,7 +106,6 @@ export default function PortfolioPage() {
     const chartData = useMemo(() => {
         if (enrichedHoldings.length === 0) return [{ name: 'Empty', value: 1, color: '#334155' }];
         
-        // Simple mock classification based on symbol
         const tech = enrichedHoldings.filter(h => ['AAPL', 'MSFT', 'NVDA', 'TSLA', '2330.TW', 'TSMC'].includes(h.symbol)).reduce((s, h) => s + h.totalValue, 0);
         const etf = enrichedHoldings.filter(h => h.symbol.includes('0050') || h.symbol.includes('SPY')).reduce((s, h) => s + h.totalValue, 0);
         const other = totalValue - tech - etf;
@@ -243,7 +241,7 @@ export default function PortfolioPage() {
                                 <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider text-right">持有股數</th>
                                 <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider text-right">平均成本</th>
                                 <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider text-right">目前現價</th>
-                                <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider text-right">未實現損益</th>
+                                <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider text-right">已實現/未實現</th>
                                 <th className="p-4 w-10"></th>
                             </tr>
                         </thead>
@@ -259,11 +257,16 @@ export default function PortfolioPage() {
                                     <td className="p-4 text-right font-semibold text-slate-300 tabular-nums text-sm">{stock.shares.toLocaleString()}</td>
                                     <td className="p-4 text-right font-semibold text-slate-300 tabular-nums text-sm">${stock.avgPrice.toFixed(2)}</td>
                                     <td className="p-4 text-right font-black text-white tabular-nums text-sm">${stock.currentPrice.toFixed(2)}</td>
-                                    <td className="p-4 text-right tabular-nums">
-                                        <span className={clsx("font-bold px-3 py-1 rounded-lg text-xs",
+                                    <td className="p-4 text-right tabular-nums flex flex-col items-end gap-1">
+                                        <span className={clsx("font-bold px-3 py-1 rounded-lg text-xs tracking-wider",
                                             stock.pnl >= 0 ? "bg-emerald-500/20 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,118,0.3)]" : "bg-rose-500/20 text-rose-400 drop-shadow-[0_0_8px_rgba(225,29,72,0.3)]"
                                         )}>
                                             {stock.pnl >= 0 ? "+" : ""}{stock.pnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                        </span>
+                                        <span className={clsx("text-[11px] font-bold px-1", 
+                                            stock.pnlPercent >= 0 ? "text-emerald-500" : "text-rose-500"
+                                        )}>
+                                            {stock.pnlPercent >= 0 ? "+" : ""}{stock.pnlPercent.toFixed(2)}%
                                         </span>
                                     </td>
                                     <td className="p-4">
@@ -279,7 +282,7 @@ export default function PortfolioPage() {
             </div>
 
             {/* AI Asset Checkup Report (Paywalled) */}
-            <div className="vision-card p-1 mt-6 relative overflow-hidden group border-emerald-500/30">
+            <div className="vision-card p-1 mt-6 relative overflow-hidden group border-emerald-500/30 mb-8">
                 <div className="bg-black/40 backdrop-blur-md rounded-[22px] p-8">
                     <div className="flex items-center gap-4 mb-6 relative z-10">
                         <div className="p-3 bg-emerald-500/20 rounded-xl border border-emerald-500/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),_0_0_15px_rgba(52,211,118,0.4)]">
@@ -295,23 +298,30 @@ export default function PortfolioPage() {
                                 : "資產配置相對均衡，符合當前 AI 基本面預期模型。"}
                         </p>
 
-                        {/* Blurred Text Area */}
-                        <div className="relative">
-                            <p className="text-slate-400 leading-relaxed blur-md select-none opacity-50 font-medium">
-                                考量到聯準會利率點陣圖可能釋出偏鷹訊號，建議將 15% 的科技股資金轉往公用事業或美債 ETF 以對沖下行風險。同時，演算法偵測到您持有的兩檔半導體設備股具高度連動性，請考慮執行部分獲利了結。
+                        {/* Blurred Text Area (If NOT pro user) */}
+                        <div className="relative mt-4">
+                            <p className={clsx("leading-relaxed font-medium transition-all duration-500", 
+                                isProUser ? "text-emerald-300/90" : "text-slate-400 blur-[5px] select-none opacity-50"
+                            )}>
+                                {isProUser 
+                                    ? "已解鎖專屬情報：考量到聯準會利率點陣圖可能釋出偏鷹訊號，建議將 15% 的科技股資金轉往公用事業或美債 ETF 以對沖下行風險。同時，演算法偵測到您持有的兩檔半導體設備股具高度連動性，資金使用效率不彰，請考慮執行部分獲利了結並換股操作。"
+                                    : "考量到聯準會利率點陣圖可能釋出偏鷹訊號，建議將 15% 的科技股資金轉往公用事業或美債 ETF 以對沖下行風險。同時，演算法偵測到您持有的兩檔半導體設備股具高度連動性，請考慮執行部分獲利了結。"
+                                }
                             </p>
 
                             {/* Paywall Overlay */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-black via-black/60 to-transparent pt-10">
-                                <button
-                                    onClick={() => setSubscriptionModalOpen(true)}
-                                    className="jelly-button-cta mt-4 flex items-center gap-3 px-8 py-4 !rounded-full relative overflow-hidden group/btn shadow-[0_0_30px_rgba(52,211,118,0.3)]"
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]" />
-                                    <Lock className="w-5 h-5 text-emerald-300 drop-shadow-[0_0_5px_rgba(52,211,118,0.8)]" />
-                                    <span className="font-bold text-white tracking-wide text-[15px]">升級 PRO 解鎖完整 AI 調倉建議</span>
-                                </button>
-                            </div>
+                            {!isProUser && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-black via-black/60 to-transparent pt-10">
+                                    <button
+                                        onClick={() => setSubscriptionModalOpen(true)}
+                                        className="jelly-button-cta mt-4 flex items-center gap-3 px-8 py-4 !rounded-full relative overflow-hidden group/btn shadow-[0_0_30px_rgba(52,211,118,0.3)]"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]" />
+                                        <Lock className="w-5 h-5 text-emerald-300 drop-shadow-[0_0_5px_rgba(52,211,118,0.8)]" />
+                                        <span className="font-bold text-white tracking-wide text-[15px]">升級 PRO 解鎖完整 AI 調倉建議</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -35,7 +35,7 @@ export default function RootLayout({
             <Sidebar />
             <div className="flex-1 flex flex-col min-w-0 bg-transparent relative z-10">
               <TopHeader />
-              <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-16">
+              <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-32 h-screen custom-scrollbar">
                 <div className="max-w-7xl mx-auto h-full">
                   {children}
                 </div>

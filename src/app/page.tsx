@@ -16,7 +16,7 @@ import clsx from "clsx";
 export default function Home() {
   const [isSubscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'technical' | 'fundamental'>('dashboard');
-  const { currentData, isSyncing, triggerLiveSync } = useAppState();
+  const { currentData, isSyncing, triggerLiveSync, isLoading } = useAppState();
 
   useEffect(() => {
     const handleOpenModal = () => setSubscriptionModalOpen(true);
@@ -24,7 +24,45 @@ export default function Home() {
     return () => window.removeEventListener("open-subscription-modal", handleOpenModal);
   }, []);
 
-  if (!currentData) return null;
+  if (isLoading) {
+    return (
+        <div className="animate-in fade-in duration-500">
+            {/* Header Skeleton */}
+            <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+                <div className="h-10 bg-white/5 rounded-lg w-1/2 max-w-md animate-pulse border border-white/5"></div>
+                <div className="h-10 bg-white/5 rounded-xl w-32 animate-pulse border border-white/5 shrink-0"></div>
+            </div>
+
+            {/* Tab Navigation Skeleton */}
+            <div className="h-12 bg-white/5 rounded-2xl w-[340px] mb-8 animate-pulse border border-white/5 mx-auto lg:mx-0"></div>
+
+            {/* Top Metrics Skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="h-[120px] bg-white/5 rounded-[22px] animate-pulse border border-emerald-500/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"></div>
+                <div className="h-[120px] bg-white/5 rounded-[22px] animate-pulse border border-white/5"></div>
+                <div className="h-[120px] bg-white/5 rounded-[22px] animate-pulse border border-white/5"></div>
+            </div>
+
+            {/* AI Flash Insight Skeleton */}
+            <div className="h-28 bg-white/5 rounded-[22px] mb-8 animate-pulse border border-emerald-500/10"></div>
+
+            {/* Charts Skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div className="lg:col-span-2 h-[400px] bg-white/5 rounded-[22px] animate-pulse border border-white/5"></div>
+                <div className="h-[400px] bg-white/5 rounded-[22px] animate-pulse border border-white/5"></div>
+            </div>
+        </div>
+    );
+  }
+
+  if (!currentData) {
+      return (
+          <div className="h-full flex flex-col items-center justify-center text-slate-500 min-h-[50vh] animate-in fade-in">
+              <LayoutDashboard className="w-16 h-16 mb-4 opacity-20" />
+              <p className="text-xl font-semibold">請在上方搜尋股票代號開始分析</p>
+          </div>
+      );
+  }
 
   return (
     <div className="animate-in fade-in duration-700">
