@@ -7,7 +7,7 @@ import { useAppState } from "@/lib/store";
 export function TopHeader() {
     const { handleSearch } = useAppState();
     const [inputValue, setInputValue] = useState("");
-    const [marketType, setMarketType] = useState("美股 US");
+    const [marketType, setMarketType] = useState("台股 TW");
 
     const onSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && inputValue.trim()) {

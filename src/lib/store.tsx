@@ -19,6 +19,7 @@ export interface StockData {
     volatility: string;
     sentimentScore: number;
     klineData: KLinePoint[];
+    aiInsight: string;
 }
 
 interface AppStateContextType {
@@ -39,24 +40,25 @@ interface AppStateContextType {
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
 
-// Mock Initial Data
+// Mock Initial Data: 台積電 2330
 const mockInitialData: StockData = {
-    symbol: "AAPL",
-    name: "Apple Inc.",
-    price: 189.43,
-    change: 1.24,
-    changePercent: 0.65,
+    symbol: "2330",
+    name: "台灣積體電路製造",
+    price: 850.00,
+    change: 12.00,
+    changePercent: 1.43,
     volume: "54.2M",
     volatility: "中等偏低",
-    sentimentScore: 75,
+    sentimentScore: 82,
+    aiInsight: "技術面呈現強勢多頭，外資延續買超趨勢。基本面受惠 AI 晶片需求強勁，長線投資價值極高，拉回皆是買點。",
     klineData: [
-        { name: "09:30", price: 188.2, volume: 4000 },
-        { name: "10:30", price: 188.8, volume: 3000 },
-        { name: "11:30", price: 188.1, volume: 2000 },
-        { name: "12:30", price: 189.5, volume: 2780 },
-        { name: "13:30", price: 189.2, volume: 1890 },
-        { name: "14:30", price: 190.1, volume: 2390 },
-        { name: "15:30", price: 189.4, volume: 3490 },
+        { name: "09:30", price: 840.0, volume: 8000 },
+        { name: "10:30", price: 845.0, volume: 6500 },
+        { name: "11:30", price: 842.0, volume: 4200 },
+        { name: "12:30", price: 852.0, volume: 5500 },
+        { name: "13:30", price: 848.0, volume: 3800 },
+        { name: "14:30", price: 855.0, volume: 4900 },
+        { name: "15:30", price: 850.0, volume: 6200 },
     ]
 };
 
@@ -73,19 +75,29 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setIsLoading(true);
         setSearchQuery(query);
 
-        // Mock Sequence
+        // Mock Sequence (Total ~1.5s)
         setLoadingStep(`連線至 ${marketToken} 交易所...`);
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         setLoadingStep("AI 正在讀取近三季財報...");
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         setLoadingStep("分析市場情緒中...");
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         // Generate mock new data based on query
-        const basePrice = Math.random() * 500 + 50;
+        const basePrice = Math.random() > 0.5 ? Math.random() * 800 + 50 : Math.random() * 100 + 10;
         const change = (Math.random() * 10 - 5);
+
+        // Random insights
+        const insights = [
+            "技術面均線上彎呈現極強勢多頭，但籌碼面監測到主力正於高檔緩步出貨。若跌破短線防守價，建議適度減碼以鎖定獲利。",
+            "目前處於大型箱型區間震盪，MACD 指標綠柱縮減即將黃金交叉。外資買盤尚未連續，建議空手觀望，突破區間上緣再行介入。",
+            "基本面優異且估值偏低，AI 資金流向正顯示有被動型 ETF 買盤持續進駐，屬於價值投資絕佳買點，可分批佈局。",
+            "短線乖離過大，技術面出現過熱訊號 (RSI > 80)。量能萎縮顯示追價意願不足，近期可能面臨大幅回檔修正風險。",
+            "產業正處於復甦週期的初期階段，財報盈餘驚喜 (Earnings Surprise) 機率高。法人默默籌碼集中，突破前高指日可待。"
+        ];
+        const randomInsight = insights[Math.floor(Math.random() * insights.length)];
 
         setCurrentData({
             symbol: query.toUpperCase().substring(0, 5),
@@ -96,10 +108,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             volume: `${(Math.random() * 100).toFixed(1)}M`,
             volatility: Math.random() > 0.5 ? "高" : "中等偏低",
             sentimentScore: Math.floor(Math.random() * 100),
+            aiInsight: randomInsight,
             klineData: mockInitialData.klineData.map(d => ({
                 ...d,
-                price: basePrice + (Math.random() * 10 - 5),
-                volume: Math.floor(Math.random() * 5000 + 1000)
+                price: basePrice + (Math.random() * (basePrice * 0.05) - (basePrice * 0.025)), // +/- 2.5% variation
+                volume: Math.floor(Math.random() * 10000 + 1000)
             }))
         });
 
