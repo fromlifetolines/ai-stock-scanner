@@ -27,8 +27,8 @@ export function KLineChart() {
             </div>
 
             {/* Chart Area */}
-            <div className="flex-1 w-full mt-24 relative z-0">
-                <ResponsiveContainer width="100%" height="100%">
+            <div className="h-[280px] w-full mt-24 relative z-0">
+                <ResponsiveContainer width="100%" height="100%" minHeight={1}>
                     <ComposedChart data={currentData.klineData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                         <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
                         <YAxis yAxisId="left" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} domain={['auto', 'auto']} />

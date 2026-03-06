@@ -31,7 +31,7 @@ export function FundamentalAnalysis({ onUnlock }: { onUnlock: () => void }) {
             {/* Content Area */}
             {!isProUser ? (
                 /* Blurred View & Paywall Overlay */
-                <div className="relative mt-4 pb-12">
+                <div className="relative mt-4 pb-20 min-h-[180px]">
                     <p className="text-slate-400 leading-relaxed font-medium blur-[6px] select-none opacity-50">
                         此外，資本支出計畫雖維持不變，但在海外擴廠的補助確認入帳後，預計下半年自由現金流將迎來拐點。主力籌碼方面，外資連續三週站在買方，投信則呈現小幅調節，顯示長線資金正持續進駐。風險提示：須留意終端消費性電子需求復甦是否如預期。建議在 10 日線附近分批佈局，停損設於季線下方 3%。各種技術指標MACD/KD翻正，營收動能維持穩健增長趨勢不變。
                     </p>
