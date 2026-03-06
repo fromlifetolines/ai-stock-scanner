@@ -56,7 +56,15 @@ const mockInitialData: StockData = {
     volatility: "中等",
     sentimentScore: 75,
     aiInsight: "技術面強勢多頭，外資延續買超趨勢。基本面受惠 AI 需求強勁，長線投資價值高。",
-    klineData: []
+    klineData: [
+        { name: "02-15", price: 810, volume: 30000000 },
+        { name: "02-16", price: 825, volume: 35000000 },
+        { name: "02-19", price: 820, volume: 28000000 },
+        { name: "02-20", price: 835, volume: 40000000 },
+        { name: "02-21", price: 830, volume: 32000000 },
+        { name: "02-22", price: 845, volume: 45000000 },
+        { name: "02-23", price: 850, volume: 54200000 }
+    ]
 };
 
 export function AppStateProvider({ children }: { children: ReactNode }) {

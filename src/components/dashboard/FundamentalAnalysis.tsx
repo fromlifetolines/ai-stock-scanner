@@ -31,15 +31,15 @@ export function FundamentalAnalysis({ onUnlock }: { onUnlock: () => void }) {
             {/* Content Area */}
             {!isProUser ? (
                 /* Blurred View & Paywall Overlay */
-                <div className="relative mt-4 pb-20 min-h-[180px]">
-                    <p className="text-slate-400 leading-relaxed font-medium blur-[6px] select-none opacity-50">
+                <div className="relative mt-8 min-h-[300px] flex flex-col justify-end">
+                    <p className="text-slate-400 leading-relaxed font-medium blur-[6px] select-none opacity-50 absolute inset-0 z-0">
                         此外，資本支出計畫雖維持不變，但在海外擴廠的補助確認入帳後，預計下半年自由現金流將迎來拐點。主力籌碼方面，外資連續三週站在買方，投信則呈現小幅調節，顯示長線資金正持續進駐。風險提示：須留意終端消費性電子需求復甦是否如預期。建議在 10 日線附近分批佈局，停損設於季線下方 3%。各種技術指標MACD/KD翻正，營收動能維持穩健增長趨勢不變。
                     </p>
 
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-black via-black/80 to-transparent pt-12 pb-8">
+                    <div className="absolute inset-0 flex flex-col items-center justify-end bg-gradient-to-t from-black via-black/80 to-transparent pb-10 z-10 pointer-events-none">
                         <button
                             onClick={onUnlock}
-                            className="jelly-button-cta mt-8 flex flex-col items-center gap-1 px-8 py-4 !rounded-3xl relative overflow-hidden group/btn shadow-[0_0_40px_rgba(52,211,118,0.25)]"
+                            className="jelly-button-cta pointer-events-auto flex flex-col items-center gap-1 px-8 py-4 !rounded-3xl relative overflow-hidden group/btn shadow-[0_0_40px_rgba(52,211,118,0.25)]"
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]" />
                             <div className="flex items-center gap-2">
