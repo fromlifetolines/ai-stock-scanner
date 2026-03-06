@@ -2,9 +2,11 @@
 
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
+import { useAppState } from "@/lib/store";
 
 export function SentimentGauge() {
-    const score = 75; // 0-100 greedy score
+    const { currentData } = useAppState();
+    const score = currentData?.sentimentScore || 50;
     const angle = -90 + (score / 100) * 180;
 
     return (

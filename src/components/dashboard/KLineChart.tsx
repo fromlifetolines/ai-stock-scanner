@@ -2,18 +2,13 @@
 
 import { ResponsiveContainer, ComposedChart, XAxis, YAxis, Tooltip, Bar, Line } from "recharts";
 import { Sparkles } from "lucide-react";
-
-const data = [
-    { name: "09:30", price: 188.2, volume: 4000 },
-    { name: "10:30", price: 188.8, volume: 3000 },
-    { name: "11:30", price: 188.1, volume: 2000 },
-    { name: "12:30", price: 189.5, volume: 2780 },
-    { name: "13:30", price: 189.2, volume: 1890 },
-    { name: "14:30", price: 190.1, volume: 2390 },
-    { name: "15:30", price: 189.4, volume: 3490 },
-];
+import { useAppState } from "@/lib/store";
 
 export function KLineChart() {
+    const { currentData } = useAppState();
+
+    if (!currentData || !currentData.klineData) return null;
+
     return (
         <div className="vision-card p-6 h-[420px] flex flex-col relative col-span-1 lg:col-span-2 hover:bg-white/[0.04] transition-colors duration-300">
             {/* AI Summary Badge inside K-Line Chart */}
@@ -34,7 +29,7 @@ export function KLineChart() {
             {/* Chart Area */}
             <div className="flex-1 w-full mt-24 relative z-0">
                 <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                    <ComposedChart data={currentData.klineData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                         <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
                         <YAxis yAxisId="left" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} domain={['auto', 'auto']} />
                         <YAxis yAxisId="right" orientation="right" display="none" />

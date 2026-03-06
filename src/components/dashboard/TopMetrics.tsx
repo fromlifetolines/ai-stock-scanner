@@ -1,5 +1,6 @@
 import { TrendingUp, Activity, BarChart2 } from "lucide-react";
 import clsx from "clsx";
+import { useAppState } from "@/lib/store";
 
 interface MetricProps {
     title: string;
@@ -42,25 +43,29 @@ function MetricCard({ title, value, change, isPositive, icon: Icon }: MetricProp
 }
 
 export function TopMetrics() {
+    const { currentData } = useAppState();
+
+    if (!currentData) return null;
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <MetricCard
-                title="AAPL 目前股價"
-                value="$189.43"
-                change="+1.24 (0.65%)"
-                isPositive={true}
+                title={`${currentData.symbol} 目前股價`}
+                value={`$${currentData.price.toFixed(2)}`}
+                change={`${currentData.change > 0 ? '+' : ''}${currentData.change.toFixed(2)} (${currentData.changePercent > 0 ? '+' : ''}${currentData.changePercent.toFixed(2)}%)`}
+                isPositive={currentData.change >= 0}
                 icon={Activity}
             />
             <MetricCard
                 title="24h 交易量"
-                value="54.2M"
+                value={currentData.volume}
                 change="較昨日 +12%"
                 isPositive={true}
                 icon={BarChart2}
             />
             <MetricCard
                 title="AI 預測波動率"
-                value="中等偏低"
+                value={currentData.volatility}
                 change="穩定區間"
                 isPositive={undefined}
                 icon={TrendingUp}
