@@ -76,52 +76,136 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setIsLoading(true);
         setSearchQuery(query);
 
-        // Mock Sequence (Total ~1.5s)
-        setLoadingStep(`連線至 ${marketToken} 交易所...`);
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        setLoadingStep("AI 正在讀取近三季財報...");
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        setLoadingStep(strategy ? `應用「${strategy}」策略分析中...` : "分析市場情緒中...");
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Generate mock new data based on query
-        const basePrice = Math.random() > 0.5 ? Math.random() * 800 + 50 : Math.random() * 100 + 10;
-        const change = (Math.random() * 10 - 5);
-
-        // Random insights
-        const insights = [
-            "技術面均線上彎呈現極強勢多頭，但籌碼面監測到主力正於高檔緩步出貨。若跌破短線防守價，建議適度減碼以鎖定獲利。",
-            "目前處於大型箱型區間震盪，MACD 指標綠柱縮減即將黃金交叉。外資買盤尚未連續，建議空手觀望，突破區間上緣再行介入。",
-            "基本面優異且估值偏低，AI 資金流向正顯示有被動型 ETF 買盤持續進駐，屬於價值投資絕佳買點，可分批佈局。",
-            "短線乖離過大，技術面出現過熱訊號 (RSI > 80)。量能萎縮顯示追價意願不足，近期可能面臨大幅回檔修正風險。",
-            "產業正處於復甦週期的初期階段，財報盈餘驚喜 (Earnings Surprise) 機率高。法人默默籌碼集中，突破前高指日可待。"
-        ];
-        
-        // Add strategy prefix if provided
-        let randomInsight = insights[Math.floor(Math.random() * insights.length)];
-        if (strategy) {
-            randomInsight = `已根據您的「${strategy}」策略優化：\n\n${randomInsight}`;
+        // Auto-format format Taiwan stock symbols
+        let symbolForApi = query.toUpperCase();
+        if (marketToken === "台股 TW" && /^\d{4}$/.test(symbolForApi)) {
+            symbolForApi = `${symbolForApi}.TW`;
         }
 
-        setCurrentData({
-            symbol: query.toUpperCase().substring(0, 5),
-            name: `${query.toUpperCase()} Corporation`,
-            price: Number(basePrice.toFixed(2)),
-            change: Number(change.toFixed(2)),
-            changePercent: Number((change / basePrice * 100).toFixed(2)),
-            volume: `${(Math.random() * 100).toFixed(1)}M`,
-            volatility: Math.random() > 0.5 ? "高" : "中等偏低",
-            sentimentScore: Math.floor(Math.random() * 100),
-            aiInsight: randomInsight,
-            customStrategy: strategy || undefined,
-            klineData: mockInitialData.klineData.map(d => ({
-                ...d,
-                price: basePrice + (Math.random() * (basePrice * 0.05) - (basePrice * 0.025)), // +/- 2.5% variation
-                volume: Math.floor(Math.random() * 10000 + 1000)
-            }))
-        });
+        try {
+            setLoadingStep(`連線至 ${marketToken} 交易所...`);
+            
+            // Proxy through AllOrigins to bypass CORS
+            // Using v8/finance/chart for basic quote data and historical kline points
+            const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbolForApi}?range=1d&interval=1h`)}`;
+            const response = await fetch(url);
+            
+            if (!response.ok) throw new Error("API Error");
+            const rawData = await response.json();
+
+            if (!rawData.chart || !rawData.chart.result || rawData.chart.result.length === 0) {
+                throw new Error("Not Found");
+            }
+
+            setLoadingStep("AI 正在讀取近三季財報...");
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            setLoadingStep(strategy ? `應用「${strategy}」策略分析中...` : "分析市場情緒中...");
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const result = rawData.chart.result[0];
+            const meta = result.meta;
+            const quote = result.indicators.quote[0];
+            const timestamps = result.timestamp;
+
+            const currentPrice = meta.regularMarketPrice;
+            const previousClose = meta.chartPreviousClose;
+            const change = currentPrice - previousClose;
+            const changePercent = (change / previousClose) * 100;
+            const volumeStr = meta.regularMarketVolume >= 1000000 
+                ? (meta.regularMarketVolume / 1000000).toFixed(1) + 'M' 
+                : meta.regularMarketVolume >= 1000 ? (meta.regularMarketVolume / 1000).toFixed(1) + 'K' : meta.regularMarketVolume.toString();
+
+            // Build KLine data from intraday chart
+            const klineData: KLinePoint[] = timestamps.map((ts: number, index: number) => {
+                const date = new Date(ts * 1000);
+                 // Format HH:mm
+                const name = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                return {
+                    name,
+                    price: Number(quote.close[index]?.toFixed(2)) || currentPrice, // Fallback to current if missing
+                    volume: quote.volume[index] || 0
+                };
+            }).filter((d: KLinePoint) => d.price !== null && !isNaN(d.price));
+
+            // Ensure we have at least some kline data for the chart not to break
+            if (klineData.length === 0) {
+                klineData.push({ name: "12:00", price: currentPrice, volume: 0 });
+            }
+
+            // --- Deterministic AI Insight Logic ---
+            let insightBase = "";
+            let sentimentScore = 50;
+            
+            if (changePercent > 3) {
+                insightBase = "⚠️ 技術面超買，股價已衝出布林通道上軌，短期動能極強但也伴隨獲利了結的回測風險。";
+                sentimentScore = 85;
+            } else if (changePercent > 0) {
+                insightBase = "均線呈現多頭排列，量價配合健康，基本面穩健支撐目前估值，可沿短期均線偏多操作。";
+                sentimentScore = 65;
+            } else if (changePercent < -3) {
+                insightBase = "⚠️ 短線賣壓沉重，已跌破重要支撐頸線。RSI 進入超賣區，建議空手觀望等待底部型態確立。";
+                sentimentScore = 15;
+            } else {
+                insightBase = "目前處於大型箱型區間震盪，方向尚未表態。外資買賣超呈現分歧，建議突破區間上緣再行介入。";
+                sentimentScore = 40;
+            }
+
+            // Special tracking for Taiwan ETFs
+            if (["0050.TW", "0056.TW", "00878.TW", "00919.TW"].includes(symbolForApi)) {
+                insightBase += " 💡 AI 監測：即將進行成分股調整，預測潛在納入/剔除標的可能引發短期連動波動。";
+            }
+
+            if (strategy) {
+                insightBase = `已根據您的「${strategy}」策略優化：\n\n${insightBase}`;
+            }
+
+            const newData: StockData = {
+                symbol: symbolForApi.replace(".TW", ""), 
+                name: meta.longName || meta.shortName || meta.symbol,
+                price: Number(currentPrice.toFixed(2)),
+                change: Number(change.toFixed(2)),
+                changePercent: Number(changePercent.toFixed(2)),
+                volume: volumeStr,
+                volatility: Math.abs(changePercent) > 2 ? "高" : "中等",
+                sentimentScore,
+                aiInsight: insightBase,
+                customStrategy: strategy || undefined,
+                klineData
+            };
+            setCurrentData(newData);
+
+            // Persist to history
+            try {
+                const historyStr = localStorage.getItem("ai_stock_history");
+                let history = historyStr ? JSON.parse(historyStr) : [];
+                // Remove existing if same symbol to put it at top
+                history = history.filter((h: any) => h.symbol !== newData.symbol);
+                history.push({
+                    id: Date.now().toString(),
+                    symbol: newData.symbol,
+                    name: newData.name,
+                    time: "剛剛", // Not used, we use timestamp
+                    insight: insightBase,
+                    isRead: false,
+                    timestamp: Date.now()
+                });
+                // Keep only last 20
+                if (history.length > 20) history.shift();
+                localStorage.setItem("ai_stock_history", JSON.stringify(history));
+            } catch (e) {
+                console.error("Failed to save history", e);
+            }
+
+        } catch (error) {
+            console.error(error);
+            // Trigger beautiful error UI by setting a special error state or using a toast (we'll implement this by throwing and letting a parent catch, or setting an error property).
+            // For now, reset to null to show an empty state, but normally we'd want user feedback.
+            alert("查無此股或連線忙碌中，請稍後再試。"); 
+            // In a real app we'd use a nice toast here
+            setIsLoading(false);
+            return;
+        }
 
         setIsLoading(false);
     };

@@ -3,29 +3,121 @@
 import { TopHeader } from "@/components/TopHeader";
 import { Sidebar } from "@/components/Sidebar";
 import { FooterDisclaimer } from "@/components/FooterDisclaimer";
-import { PieChart as PieChartIcon, TrendingUp, TrendingDown, RefreshCw, Zap, Lock } from "lucide-react";
+import { PieChart as PieChartIcon, TrendingUp, TrendingDown, RefreshCw, Zap, Lock, Plus, Trash2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useAppState } from "@/lib/store";
 import clsx from "clsx";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { SubscriptionModal } from "@/components/modals/SubscriptionModal";
 import { motion } from "framer-motion";
+
+interface Holding {
+    symbol: string;
+    name: string;
+    shares: number;
+    avgPrice: number;
+    currentPrice: number;
+}
 
 export default function PortfolioPage() {
     const { isSyncing, triggerLiveSync, currentData } = useAppState();
     const [isSubscriptionModalOpen, setSubscriptionModalOpen] = useState(false);
+    const [holdings, setHoldings] = useState<Holding[]>([]);
+    const [isAdding, setIsAdding] = useState(false);
+    
+    // Add form states
+    const [addSymbol, setAddSymbol] = useState("");
+    const [addShares, setAddShares] = useState("");
+    const [addPrice, setAddPrice] = useState("");
 
-    // Mock portfolio data
-    const totalValue = 245890.50;
-    const totalPnL = 12450.80;
+    // Load holdings on mount
+    useEffect(() => {
+        const saved = localStorage.getItem("ai_stock_holdings");
+        if (saved) {
+            try {
+                setHoldings(JSON.parse(saved));
+            } catch (e) {
+                console.error("Failed to parse holdings");
+            }
+        } else {
+            // Default demo data
+            setHoldings([
+                { symbol: "AAPL", name: "Apple Inc.", shares: 150, avgPrice: 175.2, currentPrice: 189.43 },
+                { symbol: "2330.TW", name: "台灣積體電路製造", shares: 2000, avgPrice: 750.0, currentPrice: 850.00 },
+            ]);
+        }
+    }, []);
+
+    // Save holdings
+    useEffect(() => {
+        if (holdings.length > 0) {
+            localStorage.setItem("ai_stock_holdings", JSON.stringify(holdings));
+        }
+    }, [holdings]);
+
+    // Update current price if it matches global state (a simulation of real-time update)
+    useEffect(() => {
+        if (currentData) {
+            setHoldings(prev => prev.map(h => {
+                if (h.symbol === currentData.symbol || h.symbol === `${currentData.symbol}.TW`) {
+                    return { ...h, currentPrice: currentData.price, name: currentData.name };
+                }
+                return h;
+            }));
+        }
+    }, [currentData]);
+
+    const handleAddHolding = () => {
+        if (!addSymbol || !addShares || !addPrice) return;
+        
+        const newHolding: Holding = {
+            symbol: addSymbol.toUpperCase(),
+            name: `${addSymbol.toUpperCase()} (待更新)`,
+            shares: Number(addShares),
+            avgPrice: Number(addPrice),
+            currentPrice: Number(addPrice), // Fallback until fetched
+        };
+
+        setHoldings(prev => [...prev, newHolding]);
+        setIsAdding(false);
+        setAddSymbol(""); setAddShares(""); setAddPrice("");
+        
+        // In a full app, we would immediately fetch `currentPrice` for this new symbol here.
+    };
+
+    const removeHolding = (symbol: string) => {
+        setHoldings(prev => prev.filter(h => h.symbol !== symbol));
+    };
+
+    // Calculate totals dynamically
+    const enrichedHoldings = useMemo(() => {
+        return holdings.map(h => ({
+            ...h,
+            pnl: (h.currentPrice - h.avgPrice) * h.shares,
+            totalValue: h.currentPrice * h.shares
+        }));
+    }, [holdings]);
+
+    const totalValue = enrichedHoldings.reduce((sum, h) => sum + h.totalValue, 0);
+    const totalCost = enrichedHoldings.reduce((sum, h) => sum + (h.avgPrice * h.shares), 0);
+    const totalPnL = totalValue - totalCost;
     const isUnrealizedPositive = totalPnL >= 0;
 
-    const mockHoldings = [
-        { symbol: "AAPL", name: "Apple Inc.", shares: 150, avgPrice: 175.2, currentPrice: currentData?.symbol === "AAPL" ? currentData.price : 189.43, pnl: 2134.50 },
-        { symbol: "TSLA", name: "Tesla Inc.", shares: 50, avgPrice: 220.5, currentPrice: currentData?.symbol === "TSLA" ? currentData.price : 195.20, pnl: -1265.00 },
-        { symbol: "NVDA", name: "NVIDIA Corp.", shares: 40, avgPrice: 450.0, currentPrice: currentData?.symbol === "NVDA" ? currentData.price : 680.12, pnl: 9204.80 },
-        { symbol: "0050.TW", name: "元大台灣50", shares: 2000, avgPrice: 135.5, currentPrice: currentData?.symbol === "0050." ? currentData.price : 142.80, pnl: 14600.00 },
-    ];
+    // Dynamic Chart Data
+    const chartData = useMemo(() => {
+        if (enrichedHoldings.length === 0) return [{ name: 'Empty', value: 1, color: '#334155' }];
+        
+        // Simple mock classification based on symbol
+        const tech = enrichedHoldings.filter(h => ['AAPL', 'MSFT', 'NVDA', 'TSLA', '2330.TW', 'TSMC'].includes(h.symbol)).reduce((s, h) => s + h.totalValue, 0);
+        const etf = enrichedHoldings.filter(h => h.symbol.includes('0050') || h.symbol.includes('SPY')).reduce((s, h) => s + h.totalValue, 0);
+        const other = totalValue - tech - etf;
+
+        const data = [];
+        if (tech > 0) data.push({ name: '科技股', value: Number(((tech/totalValue)*100).toFixed(1)), color: '#34d399' });
+        if (etf > 0) data.push({ name: 'ETF/大盤', value: Number(((etf/totalValue)*100).toFixed(1)), color: '#60a5fa' });
+        if (other > 0) data.push({ name: '其他', value: Number(((other/totalValue)*100).toFixed(1)), color: '#94a3b8' });
+        return data.length > 0 ? data : [{ name: 'Empty', value: 1, color: '#334155' }];
+    }, [enrichedHoldings, totalValue]);
 
     return (
         <div className="animate-in fade-in duration-700">
@@ -36,26 +128,26 @@ export default function PortfolioPage() {
                         <PieChartIcon className="w-6 h-6 text-emerald-400" />
                     </div>
                     <span className="text-gradient-silver drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]">💼 AI 操盤室</span>
-                    <span className="text-slate-500 font-semibold text-2xl">/ 我的投資組合</span>
+                    <span className="text-slate-500 font-semibold text-2xl hidden sm:inline-block">/ 我的投資組合</span>
                 </h1>
 
                 <button
                     onClick={triggerLiveSync}
                     disabled={isSyncing}
-                    className="jelly-button py-2 px-4 flex items-center gap-2 text-sm font-bold text-slate-200 group border-white/10"
+                    className="jelly-button py-2 px-4 flex items-center gap-2 text-sm font-bold text-slate-200 group border-white/10 shrink-0"
                 >
                     <RefreshCw className={clsx("w-4 h-4 text-emerald-400 group-hover:text-emerald-300", isSyncing && "animate-spin")} />
-                    即時更新報價
+                    <span className="hidden sm:inline-block">即時更新報價</span>
                 </button>
             </div>
 
             {/* Total P&L and Allocation */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                 {/* Total P&L Card */}
-                <div className="vision-card p-8 relative overflow-hidden group lg:col-span-2 flex flex-col justify-center">
+                <div className="vision-card p-8 relative overflow-hidden group lg:col-span-2 flex flex-col justify-center min-h-[250px]">
                     <div className="absolute -right-20 -top-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none" />
                     
-                    <p className="text-slate-400 font-semibold tracking-widest uppercase mb-4">總資產市值 (USD)</p>
+                    <p className="text-slate-400 font-semibold tracking-widest uppercase mb-4">總資產市值 (USD/TWD)</p>
                     <div className="flex flex-col sm:flex-row sm:items-end gap-6 relative z-10">
                         <span className="text-5xl sm:text-6xl font-black tabular-nums text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
                             ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -72,17 +164,13 @@ export default function PortfolioPage() {
                 </div>
 
                 {/* Allocation Chart */}
-                <div className="vision-card p-6 flex flex-col items-center justify-center relative overflow-hidden group mt-8 lg:mt-0 min-h-[250px]">
+                <div className="vision-card p-6 flex flex-col items-center justify-center relative overflow-hidden group">
                     <h3 className="text-sm font-semibold text-slate-400 tracking-widest uppercase mb-2">資產配置比例</h3>
                     <div className="w-full h-40">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
-                                    data={[
-                                        { name: '科技股', value: 60, color: '#34d399' },
-                                        { name: '金融股', value: 20, color: '#60a5fa' },
-                                        { name: '現金', value: 20, color: '#94a3b8' },
-                                    ]}
+                                    data={chartData}
                                     cx="50%"
                                     cy="50%"
                                     innerRadius={45}
@@ -91,28 +179,21 @@ export default function PortfolioPage() {
                                     dataKey="value"
                                     stroke="none"
                                 >
-                                    {[
-                                        { name: '科技股', value: 60, color: '#34d399' },
-                                        { name: '金融股', value: 20, color: '#60a5fa' },
-                                        { name: '現金', value: 20, color: '#94a3b8' },
-                                    ].map((entry, index) => (
+                                    {chartData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={entry.color} />
                                     ))}
                                 </Pie>
                                 <Tooltip 
                                     contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
                                     itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                    formatter={(value: any) => [`${value}%`, '佔比']}
                                 />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
                     {/* Legend */}
-                    <div className="flex items-center gap-4 mt-2">
-                        {[
-                            { name: '科技', value: 60, color: '#34d399' },
-                            { name: '金融', value: 20, color: '#60a5fa' },
-                            { name: '現金', value: 20, color: '#94a3b8' },
-                        ].map(item => (
+                    <div className="flex items-center flex-wrap justify-center gap-x-4 gap-y-2 mt-4">
+                        {chartData.map(item => (
                             <div key={item.name} className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
                                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
                                 {item.name} {item.value}%
@@ -124,33 +205,71 @@ export default function PortfolioPage() {
 
             {/* Holdings Table */}
             <div className="vision-card overflow-hidden mb-8">
+                <div className="p-4 border-b border-white/10 bg-white/[0.02] flex justify-between items-center">
+                    <h3 className="font-bold text-white tracking-wide">當前持股明細</h3>
+                    <button 
+                        onClick={() => setIsAdding(!isAdding)}
+                        className="flex items-center gap-2 text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 px-3 py-1.5 rounded-lg transition-colors border border-emerald-500/30"
+                    >
+                        <Plus className="w-3 h-3" /> 新增部位
+                    </button>
+                </div>
+                
+                {isAdding && (
+                    <div className="p-4 bg-black/40 border-b border-white/5 flex flex-wrap gap-4 items-end animate-in slide-in-from-top-2">
+                        <div className="flex-1 min-w-[120px]">
+                            <label className="block text-xs text-slate-400 mb-1">代號</label>
+                            <input value={addSymbol} onChange={e => setAddSymbol(e.target.value)} type="text" className="w-full bg-slate-900 border border-white/10 rounded px-3 py-2 text-white text-sm outline-none focus:border-emerald-500/50" placeholder="e.g. 2330.TW" />
+                        </div>
+                        <div className="flex-1 min-w-[120px]">
+                            <label className="block text-xs text-slate-400 mb-1">觸數</label>
+                            <input value={addShares} onChange={e => setAddShares(e.target.value)} type="number" className="w-full bg-slate-900 border border-white/10 rounded px-3 py-2 text-white text-sm outline-none focus:border-emerald-500/50" placeholder="1000" />
+                        </div>
+                        <div className="flex-1 min-w-[120px]">
+                            <label className="block text-xs text-slate-400 mb-1">成本均價</label>
+                            <input value={addPrice} onChange={e => setAddPrice(e.target.value)} type="number" step="0.01" className="w-full bg-slate-900 border border-white/10 rounded px-3 py-2 text-white text-sm outline-none focus:border-emerald-500/50" placeholder="150.5" />
+                        </div>
+                        <button onClick={handleAddHolding} className="jelly-button py-2 px-6 h-[38px] text-sm text-emerald-400 border-emerald-500/30 whitespace-nowrap">
+                            確認新增
+                        </button>
+                    </div>
+                )}
+
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-white/10 bg-white/[0.02]">
-                                <th className="p-4 text-sm font-semibold text-slate-400 tracking-wider">代號 / 名稱</th>
-                                <th className="p-4 text-sm font-semibold text-slate-400 tracking-wider text-right">持有股數</th>
-                                <th className="p-4 text-sm font-semibold text-slate-400 tracking-wider text-right">平均成本</th>
-                                <th className="p-4 text-sm font-semibold text-slate-400 tracking-wider text-right">目前現價</th>
-                                <th className="p-4 text-sm font-semibold text-slate-400 tracking-wider text-right">未實現損益</th>
+                            <tr className="border-b border-white/5 bg-black/20">
+                                <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider">代號 / 名稱</th>
+                                <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider text-right">持有股數</th>
+                                <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider text-right">平均成本</th>
+                                <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider text-right">目前現價</th>
+                                <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider text-right">未實現損益</th>
+                                <th className="p-4 w-10"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {mockHoldings.map((stock) => (
+                            {enrichedHoldings.length === 0 ? (
+                                <tr><td colSpan={6} className="p-8 text-center text-slate-500">尚無部位紀錄</td></tr>
+                            ) : enrichedHoldings.map((stock) => (
                                 <tr key={stock.symbol} className="hover:bg-white/[0.02] transition-colors group">
                                     <td className="p-4">
-                                        <div className="font-black text-white">{stock.symbol}</div>
-                                        <div className="text-xs text-slate-400 font-medium mt-0.5">{stock.name}</div>
+                                        <div className="font-black text-white text-sm">{stock.symbol}</div>
+                                        <div className="text-xs text-slate-400 mt-0.5 truncate max-w-[150px]" title={stock.name}>{stock.name}</div>
                                     </td>
-                                    <td className="p-4 text-right font-semibold text-slate-300 tabular-nums">{stock.shares.toLocaleString()}</td>
-                                    <td className="p-4 text-right font-semibold text-slate-300 tabular-nums">${stock.avgPrice.toFixed(2)}</td>
-                                    <td className="p-4 text-right font-black text-white tabular-nums">${stock.currentPrice.toFixed(2)}</td>
+                                    <td className="p-4 text-right font-semibold text-slate-300 tabular-nums text-sm">{stock.shares.toLocaleString()}</td>
+                                    <td className="p-4 text-right font-semibold text-slate-300 tabular-nums text-sm">${stock.avgPrice.toFixed(2)}</td>
+                                    <td className="p-4 text-right font-black text-white tabular-nums text-sm">${stock.currentPrice.toFixed(2)}</td>
                                     <td className="p-4 text-right tabular-nums">
-                                        <span className={clsx("font-bold px-3 py-1 rounded-lg text-sm",
+                                        <span className={clsx("font-bold px-3 py-1 rounded-lg text-xs",
                                             stock.pnl >= 0 ? "bg-emerald-500/20 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,118,0.3)]" : "bg-rose-500/20 text-rose-400 drop-shadow-[0_0_8px_rgba(225,29,72,0.3)]"
                                         )}>
                                             {stock.pnl >= 0 ? "+" : ""}{stock.pnl.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                         </span>
+                                    </td>
+                                    <td className="p-4">
+                                        <button onClick={() => removeHolding(stock.symbol)} className="text-slate-600 hover:text-rose-400 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -171,7 +290,9 @@ export default function PortfolioPage() {
 
                     <div className="relative z-10 text-lg">
                         <p className="text-slate-200 leading-relaxed mb-3 font-semibold text-[17px]">
-                            您的科技股權重達 60%，在近期升息預期下風險較高，建議適度減碼或增加防禦型標的。
+                            {chartData.find(d => d.name === '科技股')?.value! > 50 
+                                ? `您的科技股權重達 ${chartData.find(d => d.name === '科技股')?.value}%，在近期波動市況下風險較高，建議適度減碼或增加防禦型標的。`
+                                : "資產配置相對均衡，符合當前 AI 基本面預期模型。"}
                         </p>
 
                         {/* Blurred Text Area */}

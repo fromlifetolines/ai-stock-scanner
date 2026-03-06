@@ -53,8 +53,9 @@ export function TopHeader() {
                         placeholder="輸入股票代號或名稱 (例：0050, 2330, 00919) 按 Enter 搜尋..."
                     />
 
-                    <div className="pr-4 flex items-center pointer-events-none shrink-0">
-                        <span className="text-xs font-semibold text-slate-400 bg-white/[0.05] px-2 py-1 rounded border border-white/10">↵</span>
+                    <div className="pr-4 flex items-center pointer-events-none shrink-0 gap-2">
+                        <span className="hidden md:inline-block text-[10px] text-slate-400 uppercase font-bold tracking-widest bg-yellow-500/10 border border-yellow-500/20 text-yellow-500/80 px-2 py-1 rounded">資料延遲 15 分鐘</span>
+                        <span className="text-xs font-semibold text-slate-400 bg-white/[0.05] px-2 py-1 rounded border border-white/10 hidden sm:inline-block">↵</span>
                     </div>
                 </div>
 

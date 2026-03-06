@@ -1,30 +1,84 @@
 "use client";
 
-import { History as HistoryIcon, RefreshCw } from "lucide-react";
+import { History as HistoryIcon, RefreshCw, Trash2 } from "lucide-react";
 import clsx from "clsx";
+import { useState, useEffect } from "react";
+import { useAppState } from "@/lib/store";
+import { useRouter } from "next/navigation";
+
+export interface HistoryItem {
+    id: string;
+    symbol: string;
+    name: string;
+    time: string;
+    insight: string;
+    isRead: boolean;
+    timestamp: number;
+}
 
 export default function HistoryPage() {
-    // 假資料: 歷史搜尋紀錄
-    const historyData = [
-        { id: 1, symbol: "2330", name: "台灣積體電路製造", time: "剛剛", insight: "多頭排列，量增價漲", isRead: false },
-        { id: 2, symbol: "2603", name: "長榮海運", time: "2 小時前", insight: "高檔震盪，留意法人動向", isRead: true },
-        { id: 3, symbol: "AAPL", name: "Apple Inc.", time: "今天 09:30", insight: "技術面過熱，均線乖離過大", isRead: true },
-        { id: 4, symbol: "0050.TW", name: "元大台灣50", time: "昨天", insight: "外資連續買超，均線上彎", isRead: true },
-        { id: 5, symbol: "NVDA", name: "NVIDIA Corp.", time: "昨天", insight: "創歷史新高，AI 需求強勁", isRead: true },
-    ];
+    const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
+    const { handleSearch } = useAppState();
+    const router = useRouter();
+
+    useEffect(() => {
+        const saved = localStorage.getItem("ai_stock_history");
+        if (saved) {
+            try {
+                // Sort by newest first
+                const parsed = JSON.parse(saved).sort((a: HistoryItem, b: HistoryItem) => b.timestamp - a.timestamp);
+                setHistoryData(parsed);
+            } catch (e) {
+                console.error("Failed to parse history");
+            }
+        }
+    }, []);
+
+    const handleClearHistory = () => {
+        localStorage.removeItem("ai_stock_history");
+        setHistoryData([]);
+    };
+
+    const handleReanalyze = async (symbol: string) => {
+        router.push('/');
+        // The store handles the market specific logic based on standard query
+        await handleSearch(symbol, "台股 TW"); // Default back to TW for reanalysis as standard.
+    };
+
+    const formatTime = (ts: number) => {
+        const diff = Date.now() - ts;
+        if (diff < 3600000) return `${Math.max(1, Math.floor(diff / 60000))} 分鐘前`;
+        if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小時前`;
+        return new Date(ts).toLocaleDateString();
+    };
 
     return (
         <div className="animate-in fade-in duration-700 max-w-5xl mx-auto">
-            <h1 className="text-3xl font-black text-white mb-8 flex items-center gap-3 tracking-tight">
-                <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/30 shadow-[0_0_10px_rgba(52,211,118,0.2)]">
-                    <HistoryIcon className="w-6 h-6 text-emerald-400" />
-                </div>
-                <span className="text-gradient-silver drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]">歷史紀錄</span>
-                <span className="text-slate-500 font-semibold text-2xl">/ 最近搜尋</span>
-            </h1>
+            <div className="flex items-center justify-between mb-8">
+                <h1 className="text-3xl font-black text-white flex items-center gap-3 tracking-tight">
+                    <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/30 shadow-[0_0_10px_rgba(52,211,118,0.2)]">
+                        <HistoryIcon className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <span className="text-gradient-silver drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]">歷史紀錄</span>
+                    <span className="text-slate-500 font-semibold text-2xl hidden sm:inline-block">/ 最近搜尋</span>
+                </h1>
+
+                {historyData.length > 0 && (
+                    <button onClick={handleClearHistory} className="text-slate-500 hover:text-rose-400 text-sm font-semibold flex items-center gap-2 transition-colors">
+                        <Trash2 className="w-4 h-4" /> 
+                        <span className="hidden sm:inline-block">清除全部</span>
+                    </button>
+                )}
+            </div>
 
             <div className="space-y-4">
-                {historyData.map((item) => (
+                {historyData.length === 0 ? (
+                    <div className="text-center py-20 text-slate-500 vision-card border-dashed border-white/10">
+                        <HistoryIcon className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                        <p className="font-semibold tracking-wide">尚無搜尋紀錄</p>
+                        <p className="text-sm mt-2 opacity-50">您的 AI 分析軌跡將會保存在這裡</p>
+                    </div>
+                ) : historyData.map((item) => (
                     <div 
                         key={item.id} 
                         className={clsx(
@@ -45,18 +99,21 @@ export default function HistoryPage() {
                                         </span>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-4 text-sm font-medium">
-                                    <span className="text-slate-500">{item.time}</span>
-                                    <span className="w-1 h-1 rounded-full bg-white/20" />
-                                    <span className="text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,118,0.3)] flex items-center gap-1.5">
-                                        <SparklesIcon className="w-3.5 h-3.5" />
-                                        {item.insight}
+                                <div className="flex items-center gap-4 text-sm font-medium flex-wrap">
+                                    <span className="text-slate-500">{formatTime(item.timestamp)}</span>
+                                    <span className="w-1 h-1 rounded-full bg-white/20 hidden sm:block" />
+                                    <span className="text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,118,0.3)] flex items-start sm:items-center gap-1.5 mt-2 sm:mt-0">
+                                        <SparklesIcon className="w-3.5 h-3.5 shrink-0 mt-0.5 sm:mt-0" />
+                                        <span className="line-clamp-2 sm:line-clamp-1">{item.insight}</span>
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        <button className="jelly-button py-2 px-4 flex items-center gap-2 text-sm font-bold text-slate-200 group-hover:bg-white/10 shrink-0">
+                        <button 
+                            onClick={() => handleReanalyze(item.symbol)}
+                            className="jelly-button py-2 px-4 flex items-center gap-2 text-sm font-bold text-slate-200 group-hover:bg-white/10 shrink-0 w-fit sm:w-auto"
+                        >
                             <RefreshCw className="w-4 h-4 text-emerald-400 group-hover:rotate-180 transition-transform duration-500" />
                             重新分析
                         </button>
