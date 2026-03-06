@@ -3,7 +3,8 @@
 import { TopHeader } from "@/components/TopHeader";
 import { Sidebar } from "@/components/Sidebar";
 import { FooterDisclaimer } from "@/components/FooterDisclaimer";
-import { PieChart, TrendingUp, TrendingDown, RefreshCw, Zap, Lock } from "lucide-react";
+import { PieChart as PieChartIcon, TrendingUp, TrendingDown, RefreshCw, Zap, Lock } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useAppState } from "@/lib/store";
 import clsx from "clsx";
 import { useState } from "react";
@@ -32,7 +33,7 @@ export default function PortfolioPage() {
             <div className="flex items-center justify-between mb-8">
                 <h1 className="text-3xl font-black text-white flex items-center gap-3 tracking-tight">
                     <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/30 shadow-[0_0_10px_rgba(52,211,118,0.2)]">
-                        <PieChart className="w-6 h-6 text-emerald-400" />
+                        <PieChartIcon className="w-6 h-6 text-emerald-400" />
                     </div>
                     <span className="text-gradient-silver drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)]">💼 AI 操盤室</span>
                     <span className="text-slate-500 font-semibold text-2xl">/ 我的投資組合</span>
@@ -48,22 +49,75 @@ export default function PortfolioPage() {
                 </button>
             </div>
 
-            {/* Total P&L Card */}
-            <div className="vision-card p-8 mb-8 relative overflow-hidden group">
-                <div className="absolute -right-20 -top-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none" />
-
-                <p className="text-slate-400 font-semibold tracking-widest uppercase mb-2">總資產市值 (USD)</p>
-                <div className="flex items-end gap-6 relative z-10">
-                    <span className="text-6xl font-black tabular-nums text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
-                        ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </span>
-                    <div className={clsx("flex items-center gap-2 px-4 py-2 rounded-2xl border",
-                        isUnrealizedPositive ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(52,211,118,0.2)]" : "bg-rose-500/10 border-rose-500/20 text-rose-400 shadow-[0_0_15px_rgba(225,29,72,0.2)]"
-                    )}>
-                        {isUnrealizedPositive ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
-                        <span className="text-xl font-bold tabular-nums tracking-wide">
-                            {isUnrealizedPositive ? "+" : ""}${totalPnL.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            {/* Total P&L and Allocation */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                {/* Total P&L Card */}
+                <div className="vision-card p-8 relative overflow-hidden group lg:col-span-2 flex flex-col justify-center">
+                    <div className="absolute -right-20 -top-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none" />
+                    
+                    <p className="text-slate-400 font-semibold tracking-widest uppercase mb-4">總資產市值 (USD)</p>
+                    <div className="flex flex-col sm:flex-row sm:items-end gap-6 relative z-10">
+                        <span className="text-5xl sm:text-6xl font-black tabular-nums text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                            ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </span>
+                        <div className={clsx("flex items-center gap-2 px-4 py-2 rounded-2xl border w-fit", 
+                            isUnrealizedPositive ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(52,211,118,0.2)]" : "bg-rose-500/10 border-rose-500/20 text-rose-400 shadow-[0_0_15px_rgba(225,29,72,0.2)]"
+                        )}>
+                            {isUnrealizedPositive ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                            <span className="text-xl font-bold tabular-nums tracking-wide">
+                                {isUnrealizedPositive ? "+" : ""}${totalPnL.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Allocation Chart */}
+                <div className="vision-card p-6 flex flex-col items-center justify-center relative overflow-hidden group mt-8 lg:mt-0 min-h-[250px]">
+                    <h3 className="text-sm font-semibold text-slate-400 tracking-widest uppercase mb-2">資產配置比例</h3>
+                    <div className="w-full h-40">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={[
+                                        { name: '科技股', value: 60, color: '#34d399' },
+                                        { name: '金融股', value: 20, color: '#60a5fa' },
+                                        { name: '現金', value: 20, color: '#94a3b8' },
+                                    ]}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={45}
+                                    outerRadius={65}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                    stroke="none"
+                                >
+                                    {[
+                                        { name: '科技股', value: 60, color: '#34d399' },
+                                        { name: '金融股', value: 20, color: '#60a5fa' },
+                                        { name: '現金', value: 20, color: '#94a3b8' },
+                                    ].map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                </Pie>
+                                <Tooltip 
+                                    contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
+                                    itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                    {/* Legend */}
+                    <div className="flex items-center gap-4 mt-2">
+                        {[
+                            { name: '科技', value: 60, color: '#34d399' },
+                            { name: '金融', value: 20, color: '#60a5fa' },
+                            { name: '現金', value: 20, color: '#94a3b8' },
+                        ].map(item => (
+                            <div key={item.name} className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                                {item.name} {item.value}%
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -116,14 +170,14 @@ export default function PortfolioPage() {
                     </div>
 
                     <div className="relative z-10 text-lg">
-                        <p className="text-slate-200 leading-relaxed mb-3 font-semibold">
-                            根據本週市場動能切換，您的投資組合目前表現優異，但存在潛在的集中度風險。
+                        <p className="text-slate-200 leading-relaxed mb-3 font-semibold text-[17px]">
+                            您的科技股權重達 60%，在近期升息預期下風險較高，建議適度減碼或增加防禦型標的。
                         </p>
 
                         {/* Blurred Text Area */}
                         <div className="relative">
                             <p className="text-slate-400 leading-relaxed blur-md select-none opacity-50 font-medium">
-                                您的半導體產業曝險過高 (達總資產 70%)，在接下來即將公佈的 CPI 核心通膨數據發佈前，建議增加防禦型 ETF (如公用事業或美債) 以降低整體波動率。此外，AI 演算法偵測到您的特定持股正處於歷史高位乖離區，請考慮執行部分獲利了結，以保留更多現金部位等待下一次拉回買進的機會。
+                                考量到聯準會利率點陣圖可能釋出偏鷹訊號，建議將 15% 的科技股資金轉往公用事業或美債 ETF 以對沖下行風險。同時，演算法偵測到您持有的兩檔半導體設備股具高度連動性，請考慮執行部分獲利了結。
                             </p>
 
                             {/* Paywall Overlay */}
@@ -134,7 +188,7 @@ export default function PortfolioPage() {
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]" />
                                     <Lock className="w-5 h-5 text-emerald-300 drop-shadow-[0_0_5px_rgba(52,211,118,0.8)]" />
-                                    <span className="font-bold text-white tracking-wide text-[15px]">解鎖 AI 個人化投資組合優化建議</span>
+                                    <span className="font-bold text-white tracking-wide text-[15px]">升級 PRO 解鎖完整 AI 調倉建議</span>
                                 </button>
                             </div>
                         </div>
