@@ -80,21 +80,29 @@ export default function PortfolioPage() {
             if (/^\d{4,5}$/.test(finalSymbol)) {
                 finalSymbol = `${finalSymbol}.TW`;
             }
-            const url = `https://corsproxy.io/?${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${finalSymbol}?range=1d&interval=1d`)}`;
+            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${finalSymbol}?range=1d&interval=1d`;
+            const url = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
             const res = await fetch(url);
             if (res.ok) {
-                const data = await res.json();
-                if (data.chart?.result?.length > 0) {
-                    fetchPrice = data.chart.result[0].meta.regularMarketPrice;
-                } else if (finalSymbol.endsWith('.TW')) {
-                    // Try .TWO
-                    const urlTwo = `https://corsproxy.io/?${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${finalSymbol.replace('.TW', '.TWO')}?range=1d&interval=1d`)}`;
-                    const resTwo = await fetch(urlTwo);
-                    if (resTwo.ok) {
-                        const dataTwo = await resTwo.json();
-                        if (dataTwo.chart?.result?.length > 0) {
-                            fetchPrice = dataTwo.chart.result[0].meta.regularMarketPrice;
-                            finalSymbol = finalSymbol.replace('.TW', '.TWO');
+                const proxyData = await res.json();
+                if (proxyData.contents) {
+                    const data = JSON.parse(proxyData.contents);
+                    if (data.chart?.result?.length > 0) {
+                        fetchPrice = data.chart.result[0].meta.regularMarketPrice;
+                    } else if (finalSymbol.endsWith('.TW')) {
+                        // Try .TWO
+                        const urlTwoTarget = `https://query1.finance.yahoo.com/v8/finance/chart/${finalSymbol.replace('.TW', '.TWO')}?range=1d&interval=1d`;
+                        const urlTwo = `https://api.allorigins.win/get?url=${encodeURIComponent(urlTwoTarget)}`;
+                        const resTwo = await fetch(urlTwo);
+                        if (resTwo.ok) {
+                            const proxyDataTwo = await resTwo.json();
+                            if (proxyDataTwo.contents) {
+                                const dataTwo = JSON.parse(proxyDataTwo.contents);
+                                if (dataTwo.chart?.result?.length > 0) {
+                                    fetchPrice = dataTwo.chart.result[0].meta.regularMarketPrice;
+                                    finalSymbol = finalSymbol.replace('.TW', '.TWO');
+                                }
+                            }
                         }
                     }
                 }

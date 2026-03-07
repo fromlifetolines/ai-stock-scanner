@@ -105,11 +105,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             }
 
             const fetchRealStockData = async (sym: string) => {
-                const url = `https://corsproxy.io/?${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?range=6mo&interval=1d`)}`;
+                const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?range=1mo&interval=1d`;
+                const url = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
                 try {
                     const res = await fetch(url);
                     if (!res.ok) return null;
-                    const data = await res.json();
+                    const proxyData = await res.json();
+                    if (!proxyData.contents) return null;
+                    
+                    const data = JSON.parse(proxyData.contents);
                     if (!data.chart || !data.chart.result || data.chart.result.length === 0) return null;
                     return data.chart.result[0];
                 } catch {
@@ -225,10 +229,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             let sentimentScore = 50;
             
             if (rsi14 > 70) {
-                insightBase = "⚠️ 技術面顯示極度超買，股價已乖離過大，注意拉回風險。";
+                insightBase = "⚠️ 【過熱警示】：技術面顯示極度超買，股價已乖離過大，注意拉回風險。";
                 sentimentScore = 80;
-            } else if (trailingPE < 15 && revenueGrowth > 0) {
-                insightBase = "💎 估值相對同業偏低，基本面具備支撐，適合價值投資者關注。";
+            } else if (trailingPE < 15) {
+                insightBase = "💎 【價值區間】：估值相對同業偏低，基本面具備支撐，適合價值投資者關注。";
                 sentimentScore = 65;
             } else if (currentPrice < sma20 && rsi14 < 30) {
                 insightBase = "⚠️ 跌破月均線且 RSI 超賣，短線動能疲弱，請留意支撐是否跌破。";
@@ -247,7 +251,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             }
 
             if (strategy) {
-                insightBase = `[策略優化]：已根據您的策略進行數據權重調整。\n\n${insightBase}`;
+                insightBase = `[選擇策略：${strategy}]\n${insightBase}`;
             }
 
             const newData: StockData = {

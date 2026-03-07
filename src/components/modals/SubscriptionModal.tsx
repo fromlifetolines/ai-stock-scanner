@@ -146,7 +146,7 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
                                         {isProcessing ? (
                                             <>
                                                 <Loader2 className="w-5 h-5 animate-spin drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]" /> 
-                                                <span>連線至 Stripe 授權中...</span>
+                                                <span>處理中...</span>
                                             </>
                                         ) : isSuccess ? (
                                             <>
