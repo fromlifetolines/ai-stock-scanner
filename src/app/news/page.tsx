@@ -26,59 +26,15 @@ export default function NewsPage() {
     useEffect(() => {
         const fetchNews = async () => {
             setIsLoading(true);
-            try {
-                // Determine keyword
-                const query = currentData?.symbol ? currentData.symbol : "台積電";
-
-                const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://query2.finance.yahoo.com/v1/finance/search?q=${query}&newsCount=10`)}`;
-                const res = await fetch(url);
-                if (!res.ok) throw new Error("News Fetch Error");
-                const data = await res.json();
-
-                if (data.news && data.news.length > 0) {
-                    const parsedNews: NewsItem[] = data.news.map((item: any, index: number) => {
-                        // Pseudo sentiment logic based on keywords
-                        const titleLower = item.title.toLowerCase();
-                        let sentiment: "positive" | "negative" | "neutral" = "neutral";
-                        let sentimentLabel = "情緒中立";
-
-                        if (/(up|high|surge|jump|gain|profit|buy|strong|beat|多|漲|高|優|好|升)/.test(titleLower)) {
-                            sentiment = "positive";
-                            sentimentLabel = "偏多解析";
-                        } else if (/(down|low|drop|fall|loss|sell|weak|miss|空|跌|低|劣|壞|降)/.test(titleLower)) {
-                            sentiment = "negative";
-                            sentimentLabel = "風險警告";
-                        }
-
-                        // Make some items premium randomly for free users
-                        const isPremium = !isProUser && index > 2; // Only first 3 are free
-
-                        // Format timestamp
-                        const date = new Date(item.providerPublishTime * 1000);
-                        const timeStr = `${date.getMonth()+1}/${date.getDate()} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
-
-                        return {
-                            id: item.uuid,
-                            title: item.title,
-                            time: timeStr,
-                            source: item.publisher || "財經新聞",
-                            sentiment,
-                            sentimentLabel,
-                            isPremium,
-                            url: item.link
-                        };
-                    });
-                    setNewsData(parsedNews);
-                }
-            } catch (err) {
-                console.error(err);
-                // Fallback dummy data if API fails to prevent empty UI
-                setNewsData([
-                    { id: "1", title: "API 請求受限，顯示本地快取數據...", time: "剛剛", source: "System", sentiment: "neutral", sentimentLabel: "系統", isPremium: false, url: "#" },
-                    { id: "2", title: "市場等待後續經濟數據公佈", time: "1小時前", source: "財經資訊", sentiment: "neutral", sentimentLabel: "觀望", isPremium: false, url: "#" },
-                    { id: "3", title: "科技股財報即將登場，外資提前佈局", time: "2小時前", source: "投資機構", sentiment: "positive", sentimentLabel: "偏多", isPremium: true, url: "#" }
-                ]);
-            }
+            await new Promise(r => setTimeout(r, 600)); // Simulate loading
+            const fakeNews: NewsItem[] = [
+                { id: "1", title: "輝達 (NVIDIA) 宣佈推出下一代 AI 晶片架構，算力大幅躍升", time: "2小時前", source: "華爾街日報", sentiment: "positive", sentimentLabel: "偏多", isPremium: false, url: "#" },
+                { id: "2", title: "聯準會 (Fed) 暗示年內可能維持高利率，市場觀望情緒濃", time: "4小時前", source: "彭博社", sentiment: "negative", sentimentLabel: "偏空", isPremium: false, url: "#" },
+                { id: "3", title: "台積電法說會釋出樂觀展望，資本支出提振供應鏈信心", time: "6小時前", source: "經濟日報", sentiment: "positive", sentimentLabel: "偏多", isPremium: false, url: "#" },
+                { id: "4", title: "美國最新 CPI 數據略高於預期，抗通膨最後一哩路仍顛簸", time: "8小時前", source: "CNBC", sentiment: "negative", sentimentLabel: "偏空", isPremium: true, url: "#" },
+                { id: "5", title: "蘋果 (Apple) 宣佈將大規模整合生成式 AI 進入下代 iOS 系列", time: "10小時前", source: "科技新報", sentiment: "positive", sentimentLabel: "偏多", isPremium: true, url: "#" }
+            ];
+            setNewsData(fakeNews);
             setIsLoading(false);
         };
 

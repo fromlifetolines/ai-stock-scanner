@@ -7,7 +7,13 @@ import { useAppState } from "@/lib/store";
 export function KLineChart() {
     const { currentData } = useAppState();
 
-    if (!currentData || !currentData.klineData) return null;
+    if (!currentData || !currentData.klineData || currentData.klineData.length === 0) {
+        return (
+            <div className="vision-card p-6 h-[420px] flex items-center justify-center col-span-1 lg:col-span-2">
+                <p className="text-slate-400 font-semibold tracking-widest text-sm uppercase">圖表載入中...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="vision-card p-6 h-[420px] flex flex-col relative col-span-1 lg:col-span-2 hover:bg-white/[0.04] transition-colors duration-300">

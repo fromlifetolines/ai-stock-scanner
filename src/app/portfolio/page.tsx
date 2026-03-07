@@ -29,6 +29,7 @@ export default function PortfolioPage() {
     const [addSymbol, setAddSymbol] = useState("");
     const [addShares, setAddShares] = useState("");
     const [addPrice, setAddPrice] = useState("");
+    const [isAddingSubmit, setIsAddingSubmit] = useState(false);
 
     // Load holdings on mount
     useEffect(() => {
@@ -67,18 +68,51 @@ export default function PortfolioPage() {
         }
     }, [currentData]);
 
-    const handleAddHolding = () => {
+    const handleAddHolding = async () => {
         if (!addSymbol || !addShares || !addPrice) return;
         
+        setIsAddingSubmit(true);
+        let fetchPrice = Number(addPrice);
+        let finalSymbol = addSymbol.toUpperCase();
+        
+        try {
+            // Auto format Taiwanese symbols
+            if (/^\d{4,5}$/.test(finalSymbol)) {
+                finalSymbol = `${finalSymbol}.TW`;
+            }
+            const url = `https://corsproxy.io/?${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${finalSymbol}?range=1d&interval=1d`)}`;
+            const res = await fetch(url);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.chart?.result?.length > 0) {
+                    fetchPrice = data.chart.result[0].meta.regularMarketPrice;
+                } else if (finalSymbol.endsWith('.TW')) {
+                    // Try .TWO
+                    const urlTwo = `https://corsproxy.io/?${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${finalSymbol.replace('.TW', '.TWO')}?range=1d&interval=1d`)}`;
+                    const resTwo = await fetch(urlTwo);
+                    if (resTwo.ok) {
+                        const dataTwo = await resTwo.json();
+                        if (dataTwo.chart?.result?.length > 0) {
+                            fetchPrice = dataTwo.chart.result[0].meta.regularMarketPrice;
+                            finalSymbol = finalSymbol.replace('.TW', '.TWO');
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Fetch holding price error", e);
+        }
+
         const newHolding: Holding = {
-            symbol: addSymbol.toUpperCase(),
-            name: `${addSymbol.toUpperCase()} (待更新)`,
+            symbol: finalSymbol,
+            name: `${finalSymbol}`,
             shares: Number(addShares),
             avgPrice: Number(addPrice),
-            currentPrice: Number(addPrice),
+            currentPrice: fetchPrice,
         };
 
         setHoldings(prev => [...prev, newHolding]);
+        setIsAddingSubmit(false);
         setIsAdding(false);
         setAddSymbol(""); setAddShares(""); setAddPrice("");
     };
@@ -227,8 +261,8 @@ export default function PortfolioPage() {
                             <label className="block text-xs text-slate-400 mb-1">成本均價</label>
                             <input value={addPrice} onChange={e => setAddPrice(e.target.value)} type="number" step="0.01" className="w-full bg-slate-900 border border-white/10 rounded px-3 py-2 text-white text-sm outline-none focus:border-emerald-500/50" placeholder="150.5" />
                         </div>
-                        <button onClick={handleAddHolding} className="jelly-button py-2 px-6 h-[38px] text-sm text-emerald-400 border-emerald-500/30 whitespace-nowrap">
-                            確認新增
+                        <button onClick={handleAddHolding} disabled={isAddingSubmit} className="jelly-button py-2 px-6 h-[38px] text-sm text-emerald-400 border-emerald-500/30 whitespace-nowrap disabled:opacity-50">
+                            {isAddingSubmit ? "取得報價中..." : "確認新增"}
                         </button>
                     </div>
                 )}

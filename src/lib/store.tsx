@@ -98,117 +98,44 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         try {
             setLoadingStep(`連線至 ${marketToken} 交易所...`);
 
-            let rawData = null;
-            let finalSymbol = searchSymbol;
-
-            const fetchGoogleFinance = async (urlSuffix: string) => {
-                const targetUrl = `https://www.google.com/finance/quote/${urlSuffix}`;
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-                
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 12000);
-                    
-                    const res = await fetch(proxyUrl, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    
-                    if (!res.ok) throw new Error(`Proxy failed with status: ${res.status}`);
-                    
-                    const data = await res.json();
-                    if (!data.contents) throw new Error("No contents returned from proxy");
-                    
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(data.contents, "text/html");
-                    
-                    const priceNode = doc.querySelector('.YMlKec.fxKbKc');
-                    const changeNode = doc.querySelector('.JwB6zf');
-                    const nameNode = doc.querySelector('.zzDege') || doc.querySelector('h1');
-                    
-                    if (!priceNode) return null;
-
-                    const priceStr = priceNode.textContent?.replace(/,/g, '').match(/\d+(\.\d+)?/)?.[0] || "0";
-                    const price = parseFloat(priceStr);
-                    
-                    let change = 0;
-                    let changePercent = 0;
-                    if (changeNode) {
-                         const changeText = changeNode.textContent || "";
-                         const changeMatch = changeText.match(/([+-]?[\d,]+(\.\d+)?)\s*\(\s*([+-]?[\d,]+(\.\d+)?)%\s*\)/);
-                         if (changeMatch) {
-                             change = parseFloat(changeMatch[1].replace(/,/g, ''));
-                             changePercent = parseFloat(changeMatch[3].replace(/,/g, ''));
-                         } else {
-                            const str = changeText.replace(/,/g, '');
-                            const nums = str.match(/([+-]?\d+(\.\d+)?)/g);
-                            if (nums && nums.length >= 2) {
-                                change = parseFloat(nums[0]);
-                                changePercent = parseFloat(nums[1]);
-                            }
-                         }
-                    }
-
-                    const name = nameNode?.textContent?.trim() || urlSuffix;
-
-                    return { price, change, changePercent, name };
-
-                } catch (error) {
-                    console.error("Google Finance fetch error:", error);
-                    return "ERROR";
-                }
-            };
-
-            let currentPrice = 0;
-            let change = 0;
-            let changePercent = 0;
-            let name = "";
-            let isNetworkError = false;
-
-            if (isTaiwanStock) {
-                finalSymbol = `${searchSymbol}:TPE`;
-                let gfData = await fetchGoogleFinance(finalSymbol);
-                
-                if (gfData === "ERROR") {
-                    isNetworkError = true;
-                } else if (!gfData) {
-                    finalSymbol = `${searchSymbol}:TWO`;
-                    gfData = await fetchGoogleFinance(finalSymbol);
-                    if (gfData === "ERROR") isNetworkError = true;
-                }
-                
-                if (gfData && typeof gfData !== "string") {
-                    currentPrice = gfData.price;
-                    change = gfData.change;
-                    changePercent = gfData.changePercent;
-                    name = gfData.name;
-                    isNetworkError = false;
-                }
-            } else {
-                finalSymbol = searchSymbol;
-                let gfData = await fetchGoogleFinance(finalSymbol);
-                if (gfData === "ERROR") {
-                    isNetworkError = true;
-                } else if (gfData && typeof gfData !== "string") {
-                    currentPrice = gfData.price;
-                    change = gfData.change;
-                    changePercent = gfData.changePercent;
-                    name = gfData.name;
-                    isNetworkError = false;
-                }
-            }
-
-            if (isNetworkError) {
-                alert("⚠️ 代理伺服器忙碌中，請稍後點擊即時重算。");
+            if (/[\u4e00-\u9fa5]/.test(searchSymbol)) {
+                alert("⚠️ 查無此代碼，請確認是否輸入正確的台股/美股代號");
                 setIsLoading(false);
                 return;
             }
 
-            if (!currentPrice) {
-                // Last ditch fallback for resilient UI if GF completely removes DOM classes
-                const fallbackPrice = Math.floor(Math.random() * 400) + 50;
-                currentPrice = fallbackPrice;
-                change = 1.5;
-                changePercent = 0.5;
-                name = `${searchSymbol} (報價連線異常)`;
+            const fetchRealStockData = async (sym: string) => {
+                const url = `https://corsproxy.io/?${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?range=6mo&interval=1d`)}`;
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) return null;
+                    const data = await res.json();
+                    if (!data.chart || !data.chart.result || data.chart.result.length === 0) return null;
+                    return data.chart.result[0];
+                } catch {
+                    return null;
+                }
+            };
+
+            let rawData = null;
+            let finalSymbol = searchSymbol;
+
+            if (isTaiwanStock) {
+                finalSymbol = `${searchSymbol}.TW`;
+                rawData = await fetchRealStockData(finalSymbol);
+                
+                if (!rawData) {
+                    finalSymbol = `${searchSymbol}.TWO`;
+                    rawData = await fetchRealStockData(finalSymbol);
+                }
+            } else {
+                rawData = await fetchRealStockData(searchSymbol);
+            }
+
+            if (!rawData) {
+                alert("⚠️ 查無此代碼，請確認是否輸入正確的台股/美股代號");
+                setIsLoading(false);
+                return;
             }
 
             setLoadingStep("AI 正在解析技術與基本面指標...");
@@ -217,45 +144,50 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             setLoadingStep(strategy ? `應用「${strategy}」策略分析中...` : "生成確定性 AI 報告中...");
             await new Promise(resolve => setTimeout(resolve, 300));
 
-            const volumeStr = currentPrice > 100 ? "4.2M" : "15.8M"; // Synthetic volume
+            const meta = rawData.meta;
+            const quote = rawData.indicators.quote[0];
+            const timestamps = rawData.timestamp || [];
 
-            // Build synthetic KLine data ending at currentPrice (simulate 60 days)
-            let prevP = currentPrice - change;
-            const klineData: KLinePoint[] = [];
-            const quotes: number[] = [];
+            const currentPrice = meta.regularMarketPrice;
+            const previousClose = meta.chartPreviousClose;
+            const change = currentPrice - previousClose;
+            const changePercent = meta.regularMarketChangePercent !== undefined 
+                ? meta.regularMarketChangePercent 
+                : ((change / previousClose) * 100);
             
-            // Generate deterministic but realistic-looking random walk backwards
-            let tempP = prevP;
-            const historyPrices = [prevP];
-            for (let i = 0; i < 60; i++) {
-                // random drift based on charcode to be deterministic
-                const seed = (finalSymbol.charCodeAt(0) + i) % 10;
-                const drift = (seed / 10 - 0.5) * prevP * 0.04; 
-                tempP = tempP - drift;
-                historyPrices.unshift(Number(tempP.toFixed(2)));
-            }
-            historyPrices.push(currentPrice); // 62 days total including today
+            const name = meta.longName || meta.shortName || meta.symbol || searchSymbol;
+            const volumeStr = meta.regularMarketVolume >= 1000000 
+                ? (meta.regularMarketVolume / 1000000).toFixed(1) + 'M' 
+                : meta.regularMarketVolume >= 1000 ? (meta.regularMarketVolume / 1000).toFixed(1) + 'K' : meta.regularMarketVolume.toString();
 
-            historyPrices.forEach((px, index) => {
-                const d = new Date();
-                d.setDate(d.getDate() - (historyPrices.length - 1 - index));
+            const klineData: KLinePoint[] = [];
+            const quotes = quote.close;
+            const validQuotes: number[] = [];
+            
+            timestamps.forEach((ts: number, index: number) => {
+                const px = quotes[index];
+                if (px === null || px === undefined) return;
+                
+                validQuotes.push(px);
+                const validIndex = validQuotes.length - 1;
+                
+                const d = new Date(ts * 1000);
                 const dname = `${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
-                quotes.push(px);
                 
                 let sma5, sma20;
-                if (index >= 4) {
-                    const s5 = quotes.slice(index - 4, index + 1);
+                if (validIndex >= 4) {
+                    const s5 = validQuotes.slice(validIndex - 4, validIndex + 1);
                     sma5 = Number((s5.reduce((a, b) => a + b, 0) / 5).toFixed(2));
                 }
-                if (index >= 19) {
-                    const s20 = quotes.slice(index - 19, index + 1);
+                if (validIndex >= 19) {
+                    const s20 = validQuotes.slice(validIndex - 19, validIndex + 1);
                     sma20 = Number((s20.reduce((a, b) => a + b, 0) / 20).toFixed(2));
                 }
-                
+
                 klineData.push({
                     name: dname,
-                    price: px,
-                    volume: Math.floor(Math.random() * 20000000) + 5000000,
+                    price: Number(px.toFixed(2)),
+                    volume: quote.volume[index] || 0,
                     sma5,
                     sma20
                 });
@@ -265,12 +197,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             let sma20 = currentPrice;
             let rsi14 = 50;
 
-            if (quotes.length >= 20) {
-                sma20 = quotes.slice(-20).reduce((a, b) => a + b, 0) / 20;
+            if (validQuotes.length >= 20) {
+                sma20 = validQuotes.slice(-20).reduce((a, b) => a + b, 0) / 20;
             }
 
-            if (quotes.length >= 15) {
-                const last15 = quotes.slice(-15);
+            if (validQuotes.length >= 15) {
+                const last15 = validQuotes.slice(-15);
                 let gains = 0;
                 let losses = 0;
                 for (let i = 1; i < last15.length; i++) {

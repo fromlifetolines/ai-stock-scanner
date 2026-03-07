@@ -7,7 +7,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export function TechnicalTab() {
     const { currentData } = useAppState();
-    if (!currentData) return null;
+    if (!currentData || currentData.price === undefined) return null;
 
     return (
         <ErrorBoundary errorMessage="⚠️ 技術分析組件載入失敗">
@@ -47,9 +47,9 @@ export function TechnicalTab() {
                                 支撐與壓力預測
                             </h3>
                             <div className="flex flex-col gap-1">
-                                <div className="flex justify-between items-center"><span className="text-xs text-slate-400">壓力位 1</span><span className="font-bold text-rose-400">${(currentData.price * 1.05).toFixed(2)}</span></div>
-                                <div className="flex justify-between items-center"><span className="text-xs text-slate-400">目前價</span><span className="font-bold text-white">${currentData.price.toFixed(2)}</span></div>
-                                <div className="flex justify-between items-center"><span className="text-xs text-slate-400">支撐位 1</span><span className="font-bold text-emerald-400">${(currentData.price * 0.96).toFixed(2)}</span></div>
+                                <div className="flex justify-between items-center"><span className="text-xs text-slate-400">壓力位 1</span><span className="font-bold text-rose-400">${(currentData?.price * 1.05).toFixed(2)}</span></div>
+                                <div className="flex justify-between items-center"><span className="text-xs text-slate-400">目前價</span><span className="font-bold text-white">${currentData?.price?.toFixed(2)}</span></div>
+                                <div className="flex justify-between items-center"><span className="text-xs text-slate-400">支撐位 1</span><span className="font-bold text-emerald-400">${(currentData?.price * 0.96).toFixed(2)}</span></div>
                             </div>
                         </div>
                     </div>
