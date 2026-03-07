@@ -299,9 +299,9 @@ export default function PortfolioPage() {
                         </p>
 
                         {/* Blurred Text Area (If NOT pro user) */}
-                        <div className="relative mt-4">
+                        <div className={clsx("relative mt-4", !isProUser && "min-h-[220px] flex flex-col justify-end")}>
                             <p className={clsx("leading-relaxed font-medium transition-all duration-500", 
-                                isProUser ? "text-emerald-300/90" : "text-slate-400 blur-[5px] select-none opacity-50"
+                                isProUser ? "text-emerald-300/90" : "text-slate-400 blur-[5px] select-none opacity-50 absolute inset-0 z-0"
                             )}>
                                 {isProUser 
                                     ? "已解鎖專屬情報：考量到聯準會利率點陣圖可能釋出偏鷹訊號，建議將 15% 的科技股資金轉往公用事業或美債 ETF 以對沖下行風險。同時，演算法偵測到您持有的兩檔半導體設備股具高度連動性，資金使用效率不彰，請考慮執行部分獲利了結並換股操作。"
@@ -311,14 +311,15 @@ export default function PortfolioPage() {
 
                             {/* Paywall Overlay */}
                             {!isProUser && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-black via-black/60 to-transparent pt-10">
+                                <div className="absolute inset-0 flex flex-col items-center justify-end bg-gradient-to-t from-black via-black/60 to-transparent pb-6 z-10 pointer-events-none">
                                     <button
                                         onClick={() => setSubscriptionModalOpen(true)}
-                                        className="jelly-button-cta mt-4 flex items-center gap-3 px-8 py-4 !rounded-full relative overflow-hidden group/btn shadow-[0_0_30px_rgba(52,211,118,0.3)]"
+                                        className="pointer-events-auto jelly-button-cta mt-4 flex items-center gap-3 px-8 py-4 !rounded-full relative overflow-hidden group/btn shadow-[0_0_30px_rgba(52,211,118,0.3)] hover:shadow-[0_0_60px_rgba(52,211,118,0.6)] border border-emerald-500/30 hover:border-emerald-400/80 transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] ring-4 ring-transparent hover:ring-emerald-500/20"
                                     >
+                                        <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite]" />
-                                        <Lock className="w-5 h-5 text-emerald-300 drop-shadow-[0_0_5px_rgba(52,211,118,0.8)]" />
-                                        <span className="font-bold text-white tracking-wide text-[15px]">升級 PRO 解鎖完整 AI 調倉建議</span>
+                                        <Lock className="w-5 h-5 text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,118,1)] group-hover/btn:scale-110 group-active/btn:scale-95 group-hover/btn:-translate-y-0.5 transition-all duration-300" />
+                                        <span className="font-bold text-white tracking-wide text-[15px] group-hover/btn:text-emerald-50 transition-colors drop-shadow-md">升級 PRO 解鎖完整 AI 調倉建議</span>
                                     </button>
                                 </div>
                             )}
