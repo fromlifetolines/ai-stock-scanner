@@ -1,7 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CheckCircle2, CreditCard, Sparkles } from "lucide-react";
+import { X, CheckCircle2, CreditCard, Sparkles, Loader2, Lock } from "lucide-react";
+import { useState } from "react";
+import { useAppState } from "@/lib/store";
 
 interface SubscriptionModalProps {
     isOpen: boolean;
@@ -16,6 +18,31 @@ const features = [
 ];
 
 export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
+    const { setIsProUser } = useAppState();
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+
+    const handleSubscribe = () => {
+        setIsProcessing(true);
+        // Simulate Stripe network request
+        setTimeout(() => {
+            setIsProcessing(false);
+            setIsSuccess(true);
+            
+            // Wait for success animation, then close and unlock
+            setTimeout(() => {
+                onClose();
+                setIsProUser(true);
+                // Reset state for next time
+                setTimeout(() => setIsSuccess(false), 500);
+                
+                window.dispatchEvent(new CustomEvent('show-toast', { 
+                    detail: { message: "🎉 歡迎加入 PRO 菁英俱樂部！華爾街級算力已全面解鎖。" } 
+                }));
+            }, 800);
+        }, 2000);
+    };
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -102,10 +129,35 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
                             </div>
 
                             <div className="relative z-10">
-                                <button className="jelly-button-cta w-full py-4 text-lg font-bold text-white relative overflow-hidden group">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                                <button 
+                                    onClick={handleSubscribe}
+                                    disabled={isProcessing || isSuccess}
+                                    className={`jelly-button-cta w-full py-4 text-lg font-bold text-white relative overflow-hidden group transition-all duration-300 ${
+                                        isSuccess ? "!bg-emerald-500 !border-emerald-400 !shadow-[0_0_30px_rgba(52,211,118,0.5)] scale-[1.02]" : ""
+                                    } ${
+                                        isProcessing ? "opacity-90 cursor-wait" : ""
+                                    }`}
+                                >
+                                    {!isProcessing && !isSuccess && (
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                                    )}
                                     <span className="relative z-10 flex items-center justify-center gap-2">
-                                        <Lock className="w-5 h-5 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]" /> 確認升級並付款
+                                        {isProcessing ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 animate-spin drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]" /> 
+                                                <span>連線至 Stripe 授權中...</span>
+                                            </>
+                                        ) : isSuccess ? (
+                                            <>
+                                                <CheckCircle2 className="w-6 h-6 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" /> 
+                                                <span className="tracking-wide">付款成功！</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Lock className="w-5 h-5 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]" /> 
+                                                <span>確認升級並付款</span>
+                                            </>
+                                        )}
                                     </span>
                                 </button>
                             </div>
@@ -120,5 +172,3 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
         </AnimatePresence>
     );
 }
-
-import { Lock } from "lucide-react";

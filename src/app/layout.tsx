@@ -7,6 +7,7 @@ import { FooterDisclaimer } from "@/components/FooterDisclaimer";
 
 import { AppStateProvider } from "@/lib/store";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { Toast } from "@/components/Toast";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -44,6 +45,7 @@ export default function RootLayout({
             </div>
 
             <LoadingOverlay />
+            <Toast />
           </div>
         </AppStateProvider>
       </body>
