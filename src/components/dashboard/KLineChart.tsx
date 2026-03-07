@@ -38,7 +38,9 @@ export function KLineChart() {
                             itemStyle={{ color: "#34d399", fontWeight: "bold" }}
                         />
                         <Bar yAxisId="right" dataKey="volume" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.05)" opacity={0.8} barSize={20} radius={[4, 4, 0, 0]} />
-                        <Line yAxisId="left" type="monotone" dataKey="price" stroke="#34d399" strokeWidth={3} dot={{ r: 4, fill: "#000", strokeWidth: 2, stroke: "#34d399" }} activeDot={{ r: 6, fill: "#fff", stroke: "#34d399", strokeWidth: 3 }} style={{ filter: "drop-shadow(0px 4px 6px rgba(52,211,118,0.4))" }} />
+                        <Line name="收盤價" yAxisId="left" type="monotone" dataKey="price" stroke="#34d399" strokeWidth={3} dot={{ r: 4, fill: "#000", strokeWidth: 2, stroke: "#34d399" }} activeDot={{ r: 6, fill: "#fff", stroke: "#34d399", strokeWidth: 3 }} style={{ filter: "drop-shadow(0px 4px 6px rgba(52,211,118,0.4))" }} />
+                        <Line name="5MA" yAxisId="left" type="monotone" dataKey="sma5" stroke="#f59e0b" strokeWidth={1.5} dot={false} activeDot={false} strokeDasharray="4 4" />
+                        <Line name="20MA(月線)" yAxisId="left" type="monotone" dataKey="sma20" stroke="#3b82f6" strokeWidth={1.5} dot={false} activeDot={false} />
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
