@@ -132,12 +132,13 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
                                 <button 
                                     onClick={handleSubscribe}
                                     disabled={isProcessing || isSuccess}
-                                    className={`jelly-button-cta w-full py-4 text-lg font-bold text-white relative overflow-hidden group transition-all duration-300 ${
-                                        isSuccess ? "!bg-emerald-500 !border-emerald-400 !shadow-[0_0_30px_rgba(52,211,118,0.5)] scale-[1.02]" : ""
+                                    className={`jelly-button-cta w-full py-4 text-lg font-bold text-white relative overflow-hidden group transition-all duration-300 border border-emerald-500/30 hover:border-emerald-400/80 hover:shadow-[0_0_60px_rgba(52,211,118,0.5)] ring-4 ring-transparent hover:ring-emerald-500/20 hover:scale-[1.03] active:scale-[0.97] ${
+                                        isSuccess ? "!bg-emerald-500 !border-emerald-400 !shadow-[0_0_50px_rgba(52,211,118,0.8)] scale-[1.02]" : ""
                                     } ${
-                                        isProcessing ? "opacity-90 cursor-wait" : ""
+                                        isProcessing ? "opacity-90 cursor-wait hover:scale-100" : ""
                                     }`}
                                 >
+                                    <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                     {!isProcessing && !isSuccess && (
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
                                     )}
